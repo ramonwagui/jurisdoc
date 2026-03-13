@@ -113,6 +113,17 @@ export const RequestUploadUrlResponse = zod.object({
 });
 
 /**
+ * @summary Upload a document file with server-side text extraction
+ */
+export const UploadDocumentBody = zod.object({
+  file: zod.instanceof(File).describe("PDF or DOCX file"),
+  title: zod
+    .string()
+    .optional()
+    .describe("Document title (defaults to filename without extension)"),
+});
+
+/**
  * @summary Serve a public asset
  */
 export const GetPublicObjectParams = zod.object({
@@ -215,18 +226,6 @@ export const ListDocumentsResponse = zod.object({
   total: zod.number(),
   page: zod.number(),
   totalPages: zod.number(),
-});
-
-/**
- * @summary Upload and create a new document
- */
-
-export const CreateDocumentBody = zod.object({
-  title: zod.string().min(1),
-  fileName: zod.string().min(1),
-  storagePath: zod.string().min(1),
-  mimeType: zod.string().min(1),
-  extractedText: zod.string(),
 });
 
 /**

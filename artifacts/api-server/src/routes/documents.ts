@@ -65,12 +65,11 @@ router.get("/documents/search", async (req, res) => {
   const offset = (page - 1) * limit;
 
   const tsQuery = sql`plainto_tsquery('portuguese', ${q})`;
-  const tsVector = sql`to_tsvector('portuguese', ${documentsTable.title} || ' ' || ${documentsTable.extractedText})`;
 
   const [totalResult] = await db
     .select({ count: count() })
     .from(documentsTable)
-    .where(sql`${tsVector} @@ ${tsQuery}`);
+    .where(sql`${documentsTable.searchVector} @@ ${tsQuery}`);
 
   const total = totalResult?.count ?? 0;
 
@@ -80,14 +79,14 @@ router.get("/documents/search", async (req, res) => {
       title: documentsTable.title,
       fileName: documentsTable.fileName,
       snippet: sql<string>`ts_headline('portuguese', ${documentsTable.extractedText}, ${tsQuery}, 'MaxWords=50, MinWords=20, StartSel=<mark>, StopSel=</mark>')`,
-      rank: sql<number>`ts_rank(${tsVector}, ${tsQuery})`,
+      rank: sql<number>`ts_rank(${documentsTable.searchVector}, ${tsQuery})`,
       createdAt: documentsTable.createdAt,
       uploaderName: appUsersTable.name,
     })
     .from(documentsTable)
     .leftJoin(appUsersTable, eq(documentsTable.uploadedBy, appUsersTable.id))
-    .where(sql`${tsVector} @@ ${tsQuery}`)
-    .orderBy(sql`ts_rank(${tsVector}, ${tsQuery}) DESC`)
+    .where(sql`${documentsTable.searchVector} @@ ${tsQuery}`)
+    .orderBy(sql`ts_rank(${documentsTable.searchVector}, ${tsQuery}) DESC`)
     .limit(limit)
     .offset(offset);
 

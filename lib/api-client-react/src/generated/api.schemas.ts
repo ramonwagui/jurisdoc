@@ -127,18 +127,6 @@ export interface Document {
   uploaderName?: string;
 }
 
-export interface CreateDocumentBody {
-  /** @minLength 1 */
-  title: string;
-  /** @minLength 1 */
-  fileName: string;
-  /** @minLength 1 */
-  storagePath: string;
-  /** @minLength 1 */
-  mimeType: string;
-  extractedText: string;
-}
-
 export interface DocumentListResponse {
   documents: Document[];
   total: number;
@@ -199,6 +187,13 @@ export type HandleBrowserLoginCallbackParams = {
   code?: string;
   state?: string;
   iss?: string;
+};
+
+export type UploadDocumentBody = {
+  /** PDF or DOCX file */
+  file: Blob;
+  /** Document title (defaults to filename without extension) */
+  title?: string;
 };
 
 export type ListDocumentsParams = {

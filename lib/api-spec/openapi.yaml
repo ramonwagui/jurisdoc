@@ -180,6 +180,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+  /storage/upload-document:
+    post:
+      tags: [Storage]
+      operationId: uploadDocument
+      summary: Upload a document file with server-side text extraction
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: PDF or DOCX file
+                title:
+                  type: string
+                  description: Document title (defaults to filename without extension)
+      responses:
+        '201':
+          description: Document created with extracted text
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '400':
+          description: Invalid file type or missing file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /storage/public-objects/{filePath}:
     get:
       tags: [Storage]
@@ -358,23 +397,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DocumentListResponse"
-    post:
-      operationId: createDocument
-      tags: [documents]
-      summary: Upload and create a new document
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateDocumentBody"
-      responses:
-        "201":
-          description: Document created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Document"
   /documents/{id}:
     get:
       operationId: getDocument
@@ -654,24 +676,6 @@ components:
           type: string
           format: date-time
         uploaderName:
-          type: string
-    CreateDocumentBody:
-      type: object
-      required: [title, fileName, storagePath, mimeType, extractedText]
-      properties:
-        title:
-          type: string
-          minLength: 1
-        fileName:
-          type: string
-          minLength: 1
-        storagePath:
-          type: string
-          minLength: 1
-        mimeType:
-          type: string
-          minLength: 1
-        extractedText:
           type: string
     DocumentListResponse:
       type: object
