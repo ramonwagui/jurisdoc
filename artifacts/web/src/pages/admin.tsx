@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout";
-import { useListUsers, useCreateUser, useUpdateUser, AppUser } from "@workspace/api-client-react";
+import { useListUsers, useCreateUser, useUpdateUser } from "@workspace/api-client-react";
+import type { AppUser } from "@workspace/api-client-react";
 import { Card, Button, Input } from "@/components/ui-components";
-import { ShieldCheck, UserPlus, Search, Pencil, CheckCircle2, XCircle } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { ShieldCheck, UserPlus, Search, Pencil, CheckCircle2, XCircle, Power } from "lucide-react";
+import { motion } from "framer-motion";
 import { formatDate } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
@@ -18,11 +19,16 @@ const userSchema = z.object({
   replitUserId: z.string().min(1, "Replit User ID é obrigatório para novos usuários").optional()
 });
 
+type UserFormData = z.infer<typeof userSchema>;
+
 export default function AdminPanel() {
   const { data: users, isLoading } = useListUsers();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AppUser | null>(null);
+  const updateMutation = useUpdateUser();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const filteredUsers = users?.filter(u => 
     u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -37,6 +43,22 @@ export default function AdminPanel() {
   const openEditDialog = (user: AppUser) => {
     setEditingUser(user);
     setIsDialogOpen(true);
+  };
+
+  const toggleActive = async (user: AppUser) => {
+    try {
+      await updateMutation.mutateAsync({
+        id: user.id,
+        data: { active: !user.active },
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      toast({
+        title: user.active ? "Usuário desativado" : "Usuário ativado",
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      toast({ title: "Erro ao alterar status", description: message, variant: "destructive" });
+    }
   };
 
   return (
@@ -124,9 +146,18 @@ export default function AdminPanel() {
                       <td className="px-6 py-4 text-sm text-muted-foreground">
                         {formatDate(user.createdAt)}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-right space-x-2">
                         <Button variant="ghost" size="sm" onClick={() => openEditDialog(user)}>
-                          <Pencil className="w-4 h-4 mr-2" /> Editar
+                          <Pencil className="w-4 h-4 mr-1" /> Editar
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => toggleActive(user)}
+                          className={user.active ? "hover:text-destructive" : "hover:text-emerald-400"}
+                        >
+                          <Power className="w-4 h-4 mr-1" />
+                          {user.active ? "Desativar" : "Ativar"}
                         </Button>
                       </td>
                     </tr>
@@ -155,7 +186,7 @@ function UserDialog({ isOpen, onClose, user }: { isOpen: boolean, onClose: () =>
   
   const isEditing = !!user;
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<z.infer<typeof userSchema>>({
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
     defaultValues: {
       name: user?.name || "",
@@ -165,8 +196,7 @@ function UserDialog({ isOpen, onClose, user }: { isOpen: boolean, onClose: () =>
     }
   });
 
-  // update form when user prop changes
-  useState(() => {
+  useEffect(() => {
     if (isOpen) {
       reset({
         name: user?.name || "",
@@ -175,14 +205,14 @@ function UserDialog({ isOpen, onClose, user }: { isOpen: boolean, onClose: () =>
         replitUserId: user?.replitUserId || ""
       });
     }
-  });
+  }, [isOpen, user, reset]);
 
-  const onSubmit = async (data: z.infer<typeof userSchema>) => {
+  const onSubmit = async (data: UserFormData) => {
     try {
       if (isEditing) {
         await updateMutation.mutateAsync({ 
           id: user.id, 
-          data: { name: data.name, role: data.role as any, active: true } // simple hardcoded active for now
+          data: { name: data.name, role: data.role }
         });
         toast({ title: "Usuário atualizado com sucesso" });
       } else {
@@ -194,7 +224,7 @@ function UserDialog({ isOpen, onClose, user }: { isOpen: boolean, onClose: () =>
           data: { 
             name: data.name, 
             email: data.email || undefined, 
-            role: data.role as any, 
+            role: data.role, 
             replitUserId: data.replitUserId 
           } 
         });
@@ -202,8 +232,9 @@ function UserDialog({ isOpen, onClose, user }: { isOpen: boolean, onClose: () =>
       }
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       onClose();
-    } catch (err: any) {
-      toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      toast({ title: "Erro ao salvar", description: message, variant: "destructive" });
     }
   };
 

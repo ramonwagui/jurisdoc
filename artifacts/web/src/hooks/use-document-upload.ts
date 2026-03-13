@@ -24,7 +24,10 @@ export function useDocumentUpload() {
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
-      fullText += textContent.items.map((item: any) => item.str).join(" ") + "\n";
+      fullText += textContent.items
+        .filter((item): item is { str: string } => 'str' in item)
+        .map((item) => item.str)
+        .join(" ") + "\n";
       setProgress(10 + Math.round((i / pdf.numPages) * 30)); // 10% to 40%
     }
     return fullText;

@@ -9,6 +9,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { formatDate } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
 
+interface DocumentListItem {
+  id: number;
+  title: string;
+  fileName: string;
+  createdAt: string;
+  uploaderName?: string | null;
+  snippet?: string | null;
+}
+
 export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 500);
@@ -27,9 +36,23 @@ export default function Dashboard() {
 
   const isLoading = isSearching ? searchLoading : listLoading;
 
-  const documents = isSearching
-    ? (searchData?.results || []).map((r: any) => ({ ...r, snippet: r.snippet }))
-    : (listData?.documents || []).map((d: any) => ({ ...d, snippet: null }));
+  const documents: DocumentListItem[] = isSearching
+    ? (searchData?.results || []).map((r) => ({
+        id: r.id,
+        title: r.title,
+        fileName: r.fileName,
+        createdAt: r.createdAt,
+        uploaderName: r.uploaderName,
+        snippet: r.snippet,
+      }))
+    : (listData?.documents || []).map((d) => ({
+        id: d.id,
+        title: d.title,
+        fileName: d.fileName,
+        createdAt: d.createdAt,
+        uploaderName: d.uploaderName,
+        snippet: null,
+      }));
 
   const total = isSearching ? searchData?.total || 0 : listData?.total || 0;
 
@@ -88,7 +111,7 @@ export default function Dashboard() {
           {documents.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               <AnimatePresence>
-                {documents.map((doc: any, i: number) => (
+                {documents.map((doc, i) => (
                   <motion.div
                     key={doc.id}
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}

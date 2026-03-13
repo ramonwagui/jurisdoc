@@ -213,9 +213,13 @@ function ChatInterface({ documentId }: { documentId: number }) {
   );
 }
 
-// simple markdown bold formatter
 function formatMessageContent(text: string) {
-  let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+  let html = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/\n/g, '<br/>');
   return html;
 }

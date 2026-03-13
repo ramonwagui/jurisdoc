@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, UploadCloud, FileText, CheckCircle } from "lucide-react";
+import { X, UploadCloud, FileText, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "./ui-components";
 import { useDocumentUpload } from "@/hooks/use-document-upload";
 import { useToast } from "@/hooks/use-toast";
@@ -116,6 +116,3 @@ export function UploadModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
     </div>
   );
 }
-
-// Added to prevent missing import
-import { Loader2 } from "lucide-react";
