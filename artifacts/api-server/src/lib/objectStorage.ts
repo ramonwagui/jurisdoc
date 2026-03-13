@@ -106,6 +106,17 @@ export class ObjectStorageService {
     return new Response(webStream, { headers });
   }
 
+  async deleteObject(file: File): Promise<void> {
+    try {
+      await file.delete();
+    } catch (err: unknown) {
+      const code = (err as { code?: number }).code;
+      if (code !== 404) {
+        throw err;
+      }
+    }
+  }
+
   async uploadObjectEntity(
     buffer: Buffer,
     contentType: string,

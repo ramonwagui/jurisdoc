@@ -10,7 +10,9 @@ const app: Express = express();
 const allowedOrigins = new Set(
   [
     process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : "",
-    process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS}` : "",
+    ...(process.env.REPLIT_DOMAINS
+      ? process.env.REPLIT_DOMAINS.split(",").map((d) => `https://${d.trim()}`)
+      : []),
   ].filter(Boolean),
 );
 

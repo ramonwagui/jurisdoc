@@ -1,8 +1,9 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@workspace/replit-auth-web";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
@@ -12,10 +13,11 @@ import AdminPanel from "@/pages/admin";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+function ProtectedRoute({ component: Component, adminOnly = false }: { component: React.ComponentType; adminOnly?: boolean }) {
   const { isAuthenticated, isLoading } = useAuth();
+  const { isAdmin, isLoading: isUserLoading } = useCurrentUser();
 
-  if (isLoading) {
+  if (isLoading || (isAuthenticated && isUserLoading)) {
     return (
       <div className="min-h-screen bg-[#0A1128] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D4AF37]"></div>
@@ -28,6 +30,10 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
     return null;
   }
 
+  if (adminOnly && !isAdmin) {
+    return <Redirect to="/" />;
+  }
+
   return <Component />;
 }
 
@@ -37,7 +43,7 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/document/:id" component={() => <ProtectedRoute component={DocumentDetail} />} />
-      <Route path="/admin" component={() => <ProtectedRoute component={AdminPanel} />} />
+      <Route path="/admin" component={() => <ProtectedRoute component={AdminPanel} adminOnly />} />
       <Route component={NotFound} />
     </Switch>
   );

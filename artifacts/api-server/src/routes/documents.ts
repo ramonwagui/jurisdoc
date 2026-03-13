@@ -168,6 +168,17 @@ router.delete("/documents/:id", async (req, res) => {
     .delete(documentsTable)
     .where(eq(documentsTable.id, params.data.id));
 
+  if (doc.storagePath) {
+    try {
+      const { ObjectStorageService } = await import("../lib/objectStorage");
+      const storage = new ObjectStorageService();
+      const objectFile = await storage.getObjectEntityFile(doc.storagePath);
+      await storage.deleteObject(objectFile);
+    } catch (storageErr) {
+      console.error("Failed to delete storage object:", storageErr);
+    }
+  }
+
   res.status(204).end();
 });
 
