@@ -11,6 +11,15 @@
     },
     {
       "path": "./lib/api-zod"
+    },
+    {
+      "path": "./lib/integrations-gemini-ai"
+    },
+    {
+      "path": "./lib/replit-auth-web"
+    },
+    {
+      "path": "./lib/object-storage-web"
     }
   ]
 }

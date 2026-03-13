@@ -14,3 +14,293 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * @summary Get the currently authenticated user
+ */
+export const GetCurrentAuthUserHeader = zod.object({
+  Authorization: zod.string().optional().describe("Opaque session token"),
+});
+
+export const GetCurrentAuthUserResponse = zod.object({
+  user: zod.union([
+    zod.object({
+      id: zod.string(),
+      email: zod.string().email().nullable(),
+      firstName: zod.string().nullable(),
+      lastName: zod.string().nullable(),
+      profileImageUrl: zod.string().nullable(),
+    }),
+    zod.null(),
+  ]),
+});
+
+/**
+ * @summary Start the browser OIDC login flow
+ */
+export const BeginBrowserLoginQueryParams = zod.object({
+  returnTo: zod.coerce
+    .string()
+    .optional()
+    .describe(
+      "Relative path to redirect to after login (must start with `\/`). Defaults to `\/`.",
+    ),
+});
+
+/**
+ * @summary Complete the browser OIDC login flow
+ */
+export const HandleBrowserLoginCallbackQueryParams = zod.object({
+  code: zod.coerce.string().optional(),
+  state: zod.coerce.string().optional(),
+  iss: zod.coerce.string().url().optional(),
+});
+
+/**
+ * @summary Clear the session and begin OIDC logout
+ */
+export const LogoutBrowserSessionHeader = zod.object({
+  Authorization: zod.string().optional().describe("Opaque session token"),
+});
+
+/**
+ * @summary Exchange a mobile OIDC code for a session token
+ */
+
+export const ExchangeMobileAuthorizationCodeBody = zod.object({
+  code: zod.string().min(1),
+  code_verifier: zod.string().min(1),
+  redirect_uri: zod.string().url().min(1),
+  state: zod.string().min(1),
+  nonce: zod.string().min(1).optional(),
+});
+
+export const ExchangeMobileAuthorizationCodeResponse = zod.object({
+  token: zod.string(),
+});
+
+/**
+ * @summary Delete a mobile session token
+ */
+export const LogoutMobileSessionHeader = zod.object({
+  Authorization: zod.string().optional().describe("Opaque session token"),
+});
+
+export const LogoutMobileSessionResponse = zod.object({
+  success: zod.boolean(),
+});
+
+/**
+ * @summary Request a presigned URL for file upload
+ */
+
+export const RequestUploadUrlBody = zod.object({
+  name: zod.string().min(1),
+  size: zod.number().min(1),
+  contentType: zod.string().min(1),
+});
+
+export const RequestUploadUrlResponse = zod.object({
+  uploadURL: zod.string().url(),
+  objectPath: zod.string(),
+  metadata: zod
+    .object({
+      name: zod.string().min(1),
+      size: zod.number().min(1),
+      contentType: zod.string().min(1),
+    })
+    .optional(),
+});
+
+/**
+ * @summary Serve a public asset
+ */
+export const GetPublicObjectParams = zod.object({
+  filePath: zod.coerce.string(),
+});
+
+/**
+ * @summary Serve an object entity
+ */
+export const GetStorageObjectParams = zod.object({
+  objectPath: zod.coerce.string(),
+});
+
+/**
+ * @summary List all users (admin only)
+ */
+export const ListUsersResponseItem = zod.object({
+  id: zod.number(),
+  replitUserId: zod.string(),
+  name: zod.string(),
+  email: zod.string().nullable(),
+  role: zod.enum(["admin", "advogado"]),
+  active: zod.boolean(),
+  createdAt: zod.date(),
+});
+export const ListUsersResponse = zod.array(ListUsersResponseItem);
+
+/**
+ * @summary Create a new user (admin only)
+ */
+
+export const CreateUserBody = zod.object({
+  replitUserId: zod.string().min(1),
+  name: zod.string().min(1),
+  email: zod.string().optional(),
+  role: zod.enum(["admin", "advogado"]),
+});
+
+/**
+ * @summary Update a user (admin only)
+ */
+export const UpdateUserParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateUserBody = zod.object({
+  name: zod.string().optional(),
+  role: zod.enum(["admin", "advogado"]).optional(),
+  active: zod.boolean().optional(),
+});
+
+export const UpdateUserResponse = zod.object({
+  id: zod.number(),
+  replitUserId: zod.string(),
+  name: zod.string(),
+  email: zod.string().nullable(),
+  role: zod.enum(["admin", "advogado"]),
+  active: zod.boolean(),
+  createdAt: zod.date(),
+});
+
+/**
+ * @summary Get current app user profile with role
+ */
+export const GetCurrentUserResponse = zod.object({
+  id: zod.number(),
+  replitUserId: zod.string(),
+  name: zod.string(),
+  email: zod.string().nullable(),
+  role: zod.enum(["admin", "advogado"]),
+  active: zod.boolean(),
+  createdAt: zod.date(),
+});
+
+/**
+ * @summary List all documents
+ */
+export const listDocumentsQueryPageDefault = 1;
+export const listDocumentsQueryLimitDefault = 20;
+
+export const ListDocumentsQueryParams = zod.object({
+  page: zod.coerce.number().default(listDocumentsQueryPageDefault),
+  limit: zod.coerce.number().default(listDocumentsQueryLimitDefault),
+});
+
+export const ListDocumentsResponse = zod.object({
+  documents: zod.array(
+    zod.object({
+      id: zod.number(),
+      uploadedBy: zod.number(),
+      title: zod.string(),
+      fileName: zod.string(),
+      storagePath: zod.string(),
+      mimeType: zod.string(),
+      hasExtractedText: zod.boolean().optional(),
+      createdAt: zod.date(),
+      uploaderName: zod.string().optional(),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  totalPages: zod.number(),
+});
+
+/**
+ * @summary Upload and create a new document
+ */
+
+export const CreateDocumentBody = zod.object({
+  title: zod.string().min(1),
+  fileName: zod.string().min(1),
+  storagePath: zod.string().min(1),
+  mimeType: zod.string().min(1),
+  extractedText: zod.string(),
+});
+
+/**
+ * @summary Get a document by ID
+ */
+export const GetDocumentParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetDocumentResponse = zod.object({
+  id: zod.number(),
+  uploadedBy: zod.number(),
+  title: zod.string(),
+  fileName: zod.string(),
+  storagePath: zod.string(),
+  mimeType: zod.string(),
+  hasExtractedText: zod.boolean().optional(),
+  createdAt: zod.date(),
+  uploaderName: zod.string().optional(),
+});
+
+/**
+ * @summary Delete a document
+ */
+export const DeleteDocumentParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Full-text search across documents
+ */
+
+export const searchDocumentsQueryPageDefault = 1;
+export const searchDocumentsQueryLimitDefault = 20;
+
+export const SearchDocumentsQueryParams = zod.object({
+  q: zod.coerce.string().min(1),
+  page: zod.coerce.number().default(searchDocumentsQueryPageDefault),
+  limit: zod.coerce.number().default(searchDocumentsQueryLimitDefault),
+});
+
+export const SearchDocumentsResponse = zod.object({
+  results: zod.array(
+    zod.object({
+      id: zod.number(),
+      title: zod.string(),
+      fileName: zod.string(),
+      snippet: zod.string(),
+      rank: zod.number(),
+      createdAt: zod.date(),
+      uploaderName: zod.string().optional(),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  totalPages: zod.number(),
+  query: zod.string(),
+});
+
+/**
+ * @summary Chat with AI about a specific document (SSE stream)
+ */
+export const ChatWithDocumentParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ChatWithDocumentBody = zod.object({
+  message: zod.string().min(1),
+  history: zod
+    .array(
+      zod.object({
+        role: zod.enum(["user", "assistant"]),
+        content: zod.string(),
+      }),
+    )
+    .optional(),
+});

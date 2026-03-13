@@ -1,0 +1,23 @@
+packages:
+  "framer-motion": "For page transitions and micro-interactions"
+  "react-dropzone": "For drag-and-drop document uploads"
+  "pdfjs-dist": "For client-side PDF text extraction before upload"
+  "mammoth": "For client-side DOCX text extraction"
+  "date-fns": "For formatting dates in pt-BR"
+  "react-hook-form": "For form state management"
+  "@hookform/resolvers": "For Zod form validation"
+  "clsx": "For conditional class names"
+  "tailwind-merge": "For merging tailwind classes"
+
+images:
+  - path: "artifacts/web/public/images/hero-bg.png"
+    description: "Abstract architectural background with dark deep navy blue and subtle gold glowing accents, professional legal luxury theme, 3d render"
+    aspect_ratio: "16:9"
+  - path: "artifacts/web/public/images/logo.png"
+    description: "Minimalist modern legal scales of justice logo in shiny metallic gold on a fully transparent background, sleek"
+    aspect_ratio: "1:1"
+
+notes:
+  - "Using Replit Auth for authentication"
+  - "Chat streaming uses raw fetch to parse SSE manually"
+  - "PDF.js worker uses unpkg CDN for client-side extraction"

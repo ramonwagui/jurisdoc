@@ -8,3 +8,209 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface AuthUser {
+  id: string;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  firstName: string | null;
+  /** @nullable */
+  lastName: string | null;
+  /** @nullable */
+  profileImageUrl: string | null;
+}
+
+export interface AuthUserEnvelope {
+  user: AuthUser | null;
+}
+
+export interface MobileTokenExchangeRequest {
+  /** @minLength 1 */
+  code: string;
+  /** @minLength 1 */
+  code_verifier: string;
+  /** @minLength 1 */
+  redirect_uri: string;
+  /** @minLength 1 */
+  state: string;
+  /** @minLength 1 */
+  nonce?: string;
+}
+
+export interface MobileTokenExchangeSuccess {
+  token: string;
+}
+
+export const LogoutSuccessValue = {
+  success: true,
+} as const;
+export type LogoutSuccess = typeof LogoutSuccessValue;
+
+export interface ErrorEnvelope {
+  error: string;
+}
+
+export interface UploadUrlRequest {
+  /** @minLength 1 */
+  name: string;
+  /** @minimum 1 */
+  size: number;
+  /** @minLength 1 */
+  contentType: string;
+}
+
+export interface UploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
+  metadata?: UploadUrlRequest;
+}
+
+export type AppUserRole = (typeof AppUserRole)[keyof typeof AppUserRole];
+
+export const AppUserRole = {
+  admin: "admin",
+  advogado: "advogado",
+} as const;
+
+export interface AppUser {
+  id: number;
+  replitUserId: string;
+  name: string;
+  /** @nullable */
+  email: string | null;
+  role: AppUserRole;
+  active: boolean;
+  createdAt: string;
+}
+
+export type CreateUserBodyRole =
+  (typeof CreateUserBodyRole)[keyof typeof CreateUserBodyRole];
+
+export const CreateUserBodyRole = {
+  admin: "admin",
+  advogado: "advogado",
+} as const;
+
+export interface CreateUserBody {
+  /** @minLength 1 */
+  replitUserId: string;
+  /** @minLength 1 */
+  name: string;
+  email?: string;
+  role: CreateUserBodyRole;
+}
+
+export type UpdateUserBodyRole =
+  (typeof UpdateUserBodyRole)[keyof typeof UpdateUserBodyRole];
+
+export const UpdateUserBodyRole = {
+  admin: "admin",
+  advogado: "advogado",
+} as const;
+
+export interface UpdateUserBody {
+  name?: string;
+  role?: UpdateUserBodyRole;
+  active?: boolean;
+}
+
+export interface Document {
+  id: number;
+  uploadedBy: number;
+  title: string;
+  fileName: string;
+  storagePath: string;
+  mimeType: string;
+  hasExtractedText?: boolean;
+  createdAt: string;
+  uploaderName?: string;
+}
+
+export interface CreateDocumentBody {
+  /** @minLength 1 */
+  title: string;
+  /** @minLength 1 */
+  fileName: string;
+  /** @minLength 1 */
+  storagePath: string;
+  /** @minLength 1 */
+  mimeType: string;
+  extractedText: string;
+}
+
+export interface DocumentListResponse {
+  documents: Document[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface SearchResult {
+  id: number;
+  title: string;
+  fileName: string;
+  snippet: string;
+  rank: number;
+  createdAt: string;
+  uploaderName?: string;
+}
+
+export interface SearchResultsResponse {
+  results: SearchResult[];
+  total: number;
+  page: number;
+  totalPages: number;
+  query: string;
+}
+
+export type ChatHistoryMessageRole =
+  (typeof ChatHistoryMessageRole)[keyof typeof ChatHistoryMessageRole];
+
+export const ChatHistoryMessageRole = {
+  user: "user",
+  assistant: "assistant",
+} as const;
+
+export interface ChatHistoryMessage {
+  role: ChatHistoryMessageRole;
+  content: string;
+}
+
+export interface ChatMessageBody {
+  /** @minLength 1 */
+  message: string;
+  history?: ChatHistoryMessage[];
+}
+
+/**
+ * Opaque session token
+ */
+export type AuthorizationSessionHeaderParameter = string;
+
+export type BeginBrowserLoginParams = {
+  /**
+   * Relative path to redirect to after login (must start with `/`). Defaults to `/`.
+   */
+  returnTo?: string;
+};
+
+export type HandleBrowserLoginCallbackParams = {
+  code?: string;
+  state?: string;
+  iss?: string;
+};
+
+export type ListDocumentsParams = {
+  page?: number;
+  limit?: number;
+};
+
+export type SearchDocumentsParams = {
+  /**
+   * @minLength 1
+   */
+  q: string;
+  page?: number;
+  limit?: number;
+};
