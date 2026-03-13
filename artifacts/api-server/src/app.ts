@@ -7,15 +7,17 @@ import router from "./routes";
 
 const app: Express = express();
 
-const allowedOrigins = [
-  `https://${process.env.REPLIT_DEV_DOMAIN}`,
-  `https://${process.env.REPLIT_DOMAINS}`,
-].filter(Boolean);
+const allowedOrigins = new Set(
+  [
+    process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : "",
+    process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS}` : "",
+  ].filter(Boolean),
+);
 
 app.use(cors({
   credentials: true,
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.some(o => origin.startsWith(o))) {
+    if (!origin || allowedOrigins.has(origin)) {
       callback(null, true);
     } else {
       callback(null, false);

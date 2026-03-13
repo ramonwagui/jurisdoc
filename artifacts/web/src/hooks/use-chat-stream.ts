@@ -91,9 +91,12 @@ export function useChatStream(documentId: number) {
           }
         }
       }
-    } catch (err: any) {
-      if (err.name !== 'AbortError') {
+    } catch (err) {
+      if (err instanceof Error && err.name !== 'AbortError') {
         setError(err.message || 'Ocorreu um erro');
+        console.error(err);
+      } else if (!(err instanceof Error)) {
+        setError('Ocorreu um erro');
         console.error(err);
       }
     } finally {

@@ -56,7 +56,7 @@ ${doc.extractedText}
 
 Responda sempre em português brasileiro de forma clara e profissional.` }],
       },
-      ...history.map((m) => ({
+      ...history.map((m: { role: string; content: string }) => ({
         role: (m.role === "assistant" ? "model" : "user") as "model" | "user",
         parts: [{ text: m.content }],
       })),

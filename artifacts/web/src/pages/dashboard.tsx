@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useListDocuments, useSearchDocuments } from "@workspace/api-client-react";
+import { useListDocuments, useSearchDocuments, getListDocumentsQueryKey, getSearchDocumentsQueryKey } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout";
 import { UploadModal } from "@/components/upload-modal";
 import { Input, Button, Card } from "@/components/ui-components";
@@ -25,13 +25,15 @@ export default function Dashboard() {
 
   const isSearching = debouncedSearch.trim().length > 0;
 
+  const listParams = { page: 1, limit: 20 };
   const { data: listData, isLoading: listLoading } = useListDocuments(
-    { page: 1, limit: 20 },
-    { query: { enabled: !isSearching } }
+    listParams,
+    { query: { queryKey: getListDocumentsQueryKey(listParams), enabled: !isSearching } }
   );
+  const searchParams = { q: debouncedSearch, page: 1, limit: 20 };
   const { data: searchData, isLoading: searchLoading } = useSearchDocuments(
-    { q: debouncedSearch, page: 1, limit: 20 },
-    { query: { enabled: isSearching } }
+    searchParams,
+    { query: { queryKey: getSearchDocumentsQueryKey(searchParams), enabled: isSearching } }
   );
 
   const isLoading = isSearching ? searchLoading : listLoading;

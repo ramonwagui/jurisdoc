@@ -2,10 +2,9 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { Readable } from "stream";
 import { sql } from "drizzle-orm";
 import multer from "multer";
-import * as pdfParseModule from "pdf-parse";
+import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
 
-const pdfParse = (pdfParseModule as { default?: typeof pdfParseModule } & typeof pdfParseModule).default || pdfParseModule;
 import { db, documentsTable } from "@workspace/db";
 import {
   RequestUploadUrlBody,
@@ -100,8 +99,9 @@ router.post("/storage/upload-document", upload.single("file"), async (req: Reque
     let extractedText = "";
     try {
       if (isPdf) {
-        const pdfResult = await pdfParse(file.buffer);
-        extractedText = pdfResult.text;
+        const parser = new PDFParse({ data: new Uint8Array(file.buffer) });
+        const result = await parser.getText();
+        extractedText = result.text;
       } else {
         const docxResult = await mammoth.extractRawText({ buffer: file.buffer });
         extractedText = docxResult.value;
