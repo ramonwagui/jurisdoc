@@ -10,8 +10,13 @@ import {
 const router: IRouter = Router();
 
 router.get("/users/me", async (req, res) => {
-  if (!req.isAuthenticated() || !req.appUser) {
+  if (!req.isAuthenticated()) {
     res.status(401).json({ error: "Não autenticado" });
+    return;
+  }
+
+  if (!req.appUser) {
+    res.status(403).json({ error: "Usuário não provisionado", code: "NOT_PROVISIONED" });
     return;
   }
 

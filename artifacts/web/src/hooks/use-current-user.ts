@@ -11,24 +11,41 @@ interface AppUser {
   createdAt: string;
 }
 
+type CurrentUserResult = 
+  | { status: "provisioned"; user: AppUser }
+  | { status: "not_provisioned" }
+  | { status: "unauthenticated" };
+
+async function fetchCurrentUser(): Promise<CurrentUserResult> {
+  const res = await fetch("/api/users/me", { credentials: "include" });
+  if (res.status === 401) return { status: "unauthenticated" };
+  if (res.status === 403) return { status: "not_provisioned" };
+  if (!res.ok) throw new Error("Falha ao buscar usuário");
+  const user = await res.json();
+  return { status: "provisioned", user };
+}
+
 export function useCurrentUser() {
   const { isAuthenticated } = useAuth();
 
-  const { data, isLoading, error } = useQuery<AppUser>({
+  const { data, isLoading, error } = useQuery<CurrentUserResult>({
     queryKey: ["currentUser"],
-    queryFn: async () => {
-      const res = await fetch("/api/users/me", { credentials: "include" });
-      if (!res.ok) throw new Error("Falha ao buscar usuário");
-      return res.json();
-    },
+    queryFn: fetchCurrentUser,
     enabled: isAuthenticated,
     staleTime: 60_000,
+    retry: false,
   });
 
+  const user = data?.status === "provisioned" ? data.user : null;
+  const isProvisioned = data?.status === "provisioned";
+  const isNotProvisioned = data?.status === "not_provisioned";
+
   return {
-    user: data ?? null,
+    user,
     isLoading,
-    isAdmin: data?.role === "admin",
+    isAdmin: user?.role === "admin",
+    isProvisioned,
+    isNotProvisioned,
     error,
   };
 }
