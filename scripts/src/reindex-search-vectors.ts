@@ -2,6 +2,9 @@ import { db, documentsTable } from "@workspace/db";
 import { sql } from "drizzle-orm";
 
 async function reindexSearchVectors() {
+  console.log("Ensuring pg_trgm extension exists...");
+  await db.execute(sql`CREATE EXTENSION IF NOT EXISTS pg_trgm`);
+
   console.log("Reindexing search vectors with dual-dictionary (portuguese + simple)...");
 
   const result = await db

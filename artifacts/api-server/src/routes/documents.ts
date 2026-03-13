@@ -72,28 +72,38 @@ router.get("/documents/search", async (req, res) => {
     .where(sql`${documentsTable.searchVector} @@ ${tsQuery}`);
 
   let total = totalResult?.count ?? 0;
-  let useFallback = false;
+  let useFallback: false | "ilike" | "trigram" = false;
 
   if (total === 0) {
     const ilikePattern = `%${q}%`;
-    const [fallbackTotal] = await db
+    const [ilikeTotal] = await db
       .select({ count: count() })
       .from(documentsTable)
       .where(sql`(${documentsTable.title} || ' ' || ${documentsTable.extractedText}) ILIKE ${ilikePattern}`);
-    total = fallbackTotal?.count ?? 0;
-    useFallback = true;
+
+    if ((ilikeTotal?.count ?? 0) > 0) {
+      total = ilikeTotal!.count;
+      useFallback = "ilike";
+    } else {
+      const [trigramTotal] = await db
+        .select({ count: count() })
+        .from(documentsTable)
+        .where(sql`word_similarity(${q}, ${documentsTable.title} || ' ' || ${documentsTable.extractedText}) > 0.3`);
+      total = trigramTotal?.count ?? 0;
+      useFallback = "trigram";
+    }
   }
 
   let results;
 
-  if (useFallback) {
+  if (useFallback === "ilike") {
     const ilikePattern = `%${q}%`;
     results = await db
       .select({
         id: documentsTable.id,
         title: documentsTable.title,
         fileName: documentsTable.fileName,
-        snippet: sql<string>`substring(${documentsTable.extractedText} from position(lower(${q}) in lower(${documentsTable.extractedText})) - 50 for 150)`,
+        snippet: sql<string>`substring(${documentsTable.extractedText} from greatest(1, position(lower(${q}) in lower(${documentsTable.extractedText})) - 50) for 150)`,
         rank: sql<number>`1`,
         createdAt: documentsTable.createdAt,
         uploaderName: appUsersTable.name,
@@ -102,6 +112,23 @@ router.get("/documents/search", async (req, res) => {
       .leftJoin(appUsersTable, eq(documentsTable.uploadedBy, appUsersTable.id))
       .where(sql`(${documentsTable.title} || ' ' || ${documentsTable.extractedText}) ILIKE ${ilikePattern}`)
       .orderBy(desc(documentsTable.createdAt))
+      .limit(limit)
+      .offset(offset);
+  } else if (useFallback === "trigram") {
+    results = await db
+      .select({
+        id: documentsTable.id,
+        title: documentsTable.title,
+        fileName: documentsTable.fileName,
+        snippet: sql<string>`substring(${documentsTable.extractedText} from 1 for 150)`,
+        rank: sql<number>`word_similarity(${q}, ${documentsTable.title} || ' ' || ${documentsTable.extractedText})`,
+        createdAt: documentsTable.createdAt,
+        uploaderName: appUsersTable.name,
+      })
+      .from(documentsTable)
+      .leftJoin(appUsersTable, eq(documentsTable.uploadedBy, appUsersTable.id))
+      .where(sql`word_similarity(${q}, ${documentsTable.title} || ' ' || ${documentsTable.extractedText}) > 0.3`)
+      .orderBy(sql`word_similarity(${q}, ${documentsTable.title} || ' ' || ${documentsTable.extractedText}) DESC`)
       .limit(limit)
       .offset(offset);
   } else {
