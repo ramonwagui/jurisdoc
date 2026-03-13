@@ -276,8 +276,9 @@ function ProcessoCard({ processo }: { processo: Processo }) {
 
 function ProcessoModal({ onClose }: { onClose: () => void }) {
   const createMutation = useCreateProcesso();
-  const { data: users } = useListUsers();
   const { user: currentUser } = useCurrentUser();
+  const isAdmin = currentUser?.role === "admin";
+  const { data: users } = useListUsers({ query: { enabled: isAdmin } });
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -377,7 +378,7 @@ function ProcessoModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          {currentUser?.role === "admin" && advogados.length > 0 && (
+          {isAdmin && advogados.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1.5">Advogado Responsável</label>
               <select value={form.advogadoId} onChange={(e) => setForm({ ...form, advogadoId: Number(e.target.value) })} className="w-full h-11 rounded-lg border border-border bg-card px-4 text-foreground focus:ring-2 focus:ring-primary outline-none text-sm">
