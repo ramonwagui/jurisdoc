@@ -1307,20 +1307,25 @@ components:
           type: string
     ConsultarProcessoResponse:
       type: object
-      required: [resposta]
+      required: [resposta, processo]
       properties:
         resposta:
           type: string
         processo:
-          type: object
-          properties:
-            numero:
-              type: string
-            titulo:
-              type: string
-            status:
-              type: string
-            area:
-              type: string
-            clienteNome:
-              type: string
+          oneOf:
+            - $ref: "#/components/schemas/ConsultarProcessoData"
+            - type: 'null'
+    ConsultarProcessoData:
+      type: object
+      required: [numero, titulo, status, area, clienteNome]
+      properties:
+        numero:
+          type: string
+        titulo:
+          type: string
+        status:
+          type: string
+        area:
+          type: string
+        clienteNome:
+          type: string

@@ -397,17 +397,17 @@ export interface ConsultarProcessoBody {
   pergunta?: string;
 }
 
-export type ConsultarProcessoResponseProcesso = {
-  numero?: string;
-  titulo?: string;
-  status?: string;
-  area?: string;
-  clienteNome?: string;
-};
+export interface ConsultarProcessoData {
+  numero: string;
+  titulo: string;
+  status: string;
+  area: string;
+  clienteNome: string;
+}
 
 export interface ConsultarProcessoResponse {
   resposta: string;
-  processo?: ConsultarProcessoResponseProcesso;
+  processo: ConsultarProcessoData | null;
 }
 
 export type UploadDocumentBody = {

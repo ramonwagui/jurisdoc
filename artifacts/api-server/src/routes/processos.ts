@@ -65,9 +65,21 @@ router.get("/processos", async (req, res) => {
   const page = Math.max(1, Number(req.query.page) || 1);
   const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
   const offset = (page - 1) * limit;
-  const statusFilter = req.query.status as string | undefined;
-  const areaFilter = req.query.area as string | undefined;
-  const search = req.query.search as string | undefined;
+  const validStatuses = ["em_andamento", "aguardando_decisao", "recurso", "encerrado"] as const;
+  const validAreas = ["civil", "criminal", "trabalhista", "previdenciario", "familia", "empresarial", "outro"] as const;
+
+  const statusFilter = typeof req.query.status === "string" ? req.query.status : undefined;
+  const areaFilter = typeof req.query.area === "string" ? req.query.area : undefined;
+  const search = typeof req.query.search === "string" ? req.query.search : undefined;
+
+  if (statusFilter && !validStatuses.includes(statusFilter as typeof validStatuses[number])) {
+    res.status(400).json({ error: `Status inválido. Valores aceitos: ${validStatuses.join(", ")}` });
+    return;
+  }
+  if (areaFilter && !validAreas.includes(areaFilter as typeof validAreas[number])) {
+    res.status(400).json({ error: `Área inválida. Valores aceitos: ${validAreas.join(", ")}` });
+    return;
+  }
 
   const conditions: ReturnType<typeof eq>[] = [];
 
@@ -76,10 +88,10 @@ router.get("/processos", async (req, res) => {
   }
 
   if (statusFilter) {
-    conditions.push(eq(processosTable.status, statusFilter as any));
+    conditions.push(eq(processosTable.status, statusFilter as typeof validStatuses[number]));
   }
   if (areaFilter) {
-    conditions.push(eq(processosTable.area, areaFilter as any));
+    conditions.push(eq(processosTable.area, areaFilter as typeof validAreas[number]));
   }
   if (search) {
     const pattern = `%${search}%`;

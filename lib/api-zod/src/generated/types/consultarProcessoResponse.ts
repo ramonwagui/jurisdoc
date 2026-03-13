@@ -5,9 +5,9 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { ConsultarProcessoResponseProcesso } from "./consultarProcessoResponseProcesso";
+import type { ConsultarProcessoData } from "./consultarProcessoData";
 
 export interface ConsultarProcessoResponse {
   resposta: string;
-  processo?: ConsultarProcessoResponseProcesso;
+  processo: ConsultarProcessoData | null;
 }

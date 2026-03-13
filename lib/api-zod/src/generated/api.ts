@@ -432,15 +432,16 @@ export const ConsultarProcessoBody = zod.object({
 
 export const ConsultarProcessoResponse = zod.object({
   resposta: zod.string(),
-  processo: zod
-    .object({
-      numero: zod.string().optional(),
-      titulo: zod.string().optional(),
-      status: zod.string().optional(),
-      area: zod.string().optional(),
-      clienteNome: zod.string().optional(),
-    })
-    .optional(),
+  processo: zod.union([
+    zod.object({
+      numero: zod.string(),
+      titulo: zod.string(),
+      status: zod.string(),
+      area: zod.string(),
+      clienteNome: zod.string(),
+    }),
+    zod.null(),
+  ]),
 });
 
 /**
