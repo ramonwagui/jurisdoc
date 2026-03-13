@@ -1,11 +1,12 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { Readable } from "stream";
+import { sql } from "drizzle-orm";
+import { db, documentsTable } from "@workspace/db";
 import {
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
 } from "@workspace/api-zod";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
-import { ObjectPermission } from "../lib/objectAcl";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -93,12 +94,24 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
   try {
     const raw = req.params.path;
     const wildcardPath = Array.isArray(raw) ? raw.join("/") : raw;
-    if (!req.isAuthenticated()) {
+    if (!req.isAuthenticated() || !req.appUser) {
       res.status(401).json({ error: "Não autenticado" });
       return;
     }
 
     const objectPath = `/objects/${wildcardPath}`;
+
+    const [docRecord] = await db
+      .select({ id: documentsTable.id })
+      .from(documentsTable)
+      .where(sql`${documentsTable.storagePath} = ${objectPath}`)
+      .limit(1);
+
+    if (!docRecord) {
+      res.status(404).json({ error: "Objeto não encontrado" });
+      return;
+    }
+
     const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
 
     const response = await objectStorageService.downloadObject(objectFile);

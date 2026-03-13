@@ -10,7 +10,7 @@ import {
 const router: IRouter = Router();
 
 router.post("/documents/:id/chat", async (req, res) => {
-  if (!req.isAuthenticated()) {
+  if (!req.isAuthenticated() || !req.appUser) {
     res.status(401).json({ error: "Não autenticado" });
     return;
   }

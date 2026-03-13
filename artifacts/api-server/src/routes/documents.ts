@@ -12,7 +12,7 @@ import {
 const router: IRouter = Router();
 
 router.get("/documents", async (req, res) => {
-  if (!req.isAuthenticated()) {
+  if (!req.isAuthenticated() || !req.appUser) {
     res.status(401).json({ error: "Não autenticado" });
     return;
   }
@@ -52,19 +52,8 @@ router.get("/documents", async (req, res) => {
 });
 
 router.post("/documents", async (req, res) => {
-  if (!req.isAuthenticated()) {
+  if (!req.isAuthenticated() || !req.appUser) {
     res.status(401).json({ error: "Não autenticado" });
-    return;
-  }
-
-  const appUser = await db
-    .select()
-    .from(appUsersTable)
-    .where(eq(appUsersTable.replitUserId, req.user.id))
-    .limit(1);
-
-  if (appUser.length === 0) {
-    res.status(401).json({ error: "Usuário não encontrado no sistema" });
     return;
   }
 
@@ -77,7 +66,7 @@ router.post("/documents", async (req, res) => {
   const [doc] = await db
     .insert(documentsTable)
     .values({
-      uploadedBy: appUser[0].id,
+      uploadedBy: req.appUser.id,
       title: parsed.data.title,
       fileName: parsed.data.fileName,
       storagePath: parsed.data.storagePath,
@@ -90,7 +79,7 @@ router.post("/documents", async (req, res) => {
 });
 
 router.get("/documents/search", async (req, res) => {
-  if (!req.isAuthenticated()) {
+  if (!req.isAuthenticated() || !req.appUser) {
     res.status(401).json({ error: "Não autenticado" });
     return;
   }
@@ -141,7 +130,7 @@ router.get("/documents/search", async (req, res) => {
 });
 
 router.get("/documents/:id", async (req, res) => {
-  if (!req.isAuthenticated()) {
+  if (!req.isAuthenticated() || !req.appUser) {
     res.status(401).json({ error: "Não autenticado" });
     return;
   }
@@ -178,7 +167,7 @@ router.get("/documents/:id", async (req, res) => {
 });
 
 router.delete("/documents/:id", async (req, res) => {
-  if (!req.isAuthenticated()) {
+  if (!req.isAuthenticated() || !req.appUser) {
     res.status(401).json({ error: "Não autenticado" });
     return;
   }
@@ -189,15 +178,25 @@ router.delete("/documents/:id", async (req, res) => {
     return;
   }
 
-  const [deleted] = await db
-    .delete(documentsTable)
+  const [doc] = await db
+    .select()
+    .from(documentsTable)
     .where(eq(documentsTable.id, params.data.id))
-    .returning();
+    .limit(1);
 
-  if (!deleted) {
+  if (!doc) {
     res.status(404).json({ error: "Documento não encontrado" });
     return;
   }
+
+  if (doc.uploadedBy !== req.appUser.id && req.appUser.role !== "admin") {
+    res.status(403).json({ error: "Sem permissão para excluir este documento" });
+    return;
+  }
+
+  await db
+    .delete(documentsTable)
+    .where(eq(documentsTable.id, params.data.id));
 
   res.status(204).end();
 });

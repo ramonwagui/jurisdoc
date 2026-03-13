@@ -10,51 +10,21 @@ import {
 const router: IRouter = Router();
 
 router.get("/users/me", async (req, res) => {
-  if (!req.isAuthenticated()) {
+  if (!req.isAuthenticated() || !req.appUser) {
     res.status(401).json({ error: "Não autenticado" });
     return;
   }
 
-  const appUser = await db
-    .select()
-    .from(appUsersTable)
-    .where(eq(appUsersTable.replitUserId, req.user.id))
-    .limit(1);
-
-  if (appUser.length === 0) {
-    const allUsers = await db.select().from(appUsersTable).limit(1);
-    const role = allUsers.length === 0 ? "admin" as const : "advogado" as const;
-    
-    const [newUser] = await db
-      .insert(appUsersTable)
-      .values({
-        replitUserId: req.user.id,
-        name: [req.user.firstName, req.user.lastName].filter(Boolean).join(" ") || "Usuário",
-        email: req.user.email,
-        role,
-      })
-      .returning();
-
-    res.json(newUser);
-    return;
-  }
-
-  res.json(appUser[0]);
+  res.json(req.appUser);
 });
 
 router.get("/users", async (req, res) => {
-  if (!req.isAuthenticated()) {
+  if (!req.isAuthenticated() || !req.appUser) {
     res.status(401).json({ error: "Não autenticado" });
     return;
   }
 
-  const appUser = await db
-    .select()
-    .from(appUsersTable)
-    .where(eq(appUsersTable.replitUserId, req.user.id))
-    .limit(1);
-
-  if (appUser.length === 0 || appUser[0].role !== "admin") {
+  if (req.appUser.role !== "admin") {
     res.status(403).json({ error: "Acesso negado" });
     return;
   }
@@ -64,18 +34,12 @@ router.get("/users", async (req, res) => {
 });
 
 router.post("/users", async (req, res) => {
-  if (!req.isAuthenticated()) {
+  if (!req.isAuthenticated() || !req.appUser) {
     res.status(401).json({ error: "Não autenticado" });
     return;
   }
 
-  const appUser = await db
-    .select()
-    .from(appUsersTable)
-    .where(eq(appUsersTable.replitUserId, req.user.id))
-    .limit(1);
-
-  if (appUser.length === 0 || appUser[0].role !== "admin") {
+  if (req.appUser.role !== "admin") {
     res.status(403).json({ error: "Acesso negado" });
     return;
   }
@@ -100,18 +64,12 @@ router.post("/users", async (req, res) => {
 });
 
 router.patch("/users/:id", async (req, res) => {
-  if (!req.isAuthenticated()) {
+  if (!req.isAuthenticated() || !req.appUser) {
     res.status(401).json({ error: "Não autenticado" });
     return;
   }
 
-  const appUser = await db
-    .select()
-    .from(appUsersTable)
-    .where(eq(appUsersTable.replitUserId, req.user.id))
-    .limit(1);
-
-  if (appUser.length === 0 || appUser[0].role !== "admin") {
+  if (req.appUser.role !== "admin") {
     res.status(403).json({ error: "Acesso negado" });
     return;
   }
