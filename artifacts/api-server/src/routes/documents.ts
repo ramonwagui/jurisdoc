@@ -64,31 +64,64 @@ router.get("/documents/search", async (req, res) => {
   const { q, page = 1, limit = 20 } = parsed.data;
   const offset = (page - 1) * limit;
 
-  const tsQuery = sql`plainto_tsquery('portuguese', ${q})`;
+  const tsQuery = sql`(websearch_to_tsquery('portuguese', ${q}) || websearch_to_tsquery('simple', ${q}))`;
 
   const [totalResult] = await db
     .select({ count: count() })
     .from(documentsTable)
     .where(sql`${documentsTable.searchVector} @@ ${tsQuery}`);
 
-  const total = totalResult?.count ?? 0;
+  let total = totalResult?.count ?? 0;
+  let useFallback = false;
 
-  const results = await db
-    .select({
-      id: documentsTable.id,
-      title: documentsTable.title,
-      fileName: documentsTable.fileName,
-      snippet: sql<string>`ts_headline('portuguese', ${documentsTable.extractedText}, ${tsQuery}, 'MaxWords=50, MinWords=20, StartSel=<mark>, StopSel=</mark>')`,
-      rank: sql<number>`ts_rank(${documentsTable.searchVector}, ${tsQuery})`,
-      createdAt: documentsTable.createdAt,
-      uploaderName: appUsersTable.name,
-    })
-    .from(documentsTable)
-    .leftJoin(appUsersTable, eq(documentsTable.uploadedBy, appUsersTable.id))
-    .where(sql`${documentsTable.searchVector} @@ ${tsQuery}`)
-    .orderBy(sql`ts_rank(${documentsTable.searchVector}, ${tsQuery}) DESC`)
-    .limit(limit)
-    .offset(offset);
+  if (total === 0) {
+    const ilikePattern = `%${q}%`;
+    const [fallbackTotal] = await db
+      .select({ count: count() })
+      .from(documentsTable)
+      .where(sql`(${documentsTable.title} || ' ' || ${documentsTable.extractedText}) ILIKE ${ilikePattern}`);
+    total = fallbackTotal?.count ?? 0;
+    useFallback = true;
+  }
+
+  let results;
+
+  if (useFallback) {
+    const ilikePattern = `%${q}%`;
+    results = await db
+      .select({
+        id: documentsTable.id,
+        title: documentsTable.title,
+        fileName: documentsTable.fileName,
+        snippet: sql<string>`substring(${documentsTable.extractedText} from position(lower(${q}) in lower(${documentsTable.extractedText})) - 50 for 150)`,
+        rank: sql<number>`1`,
+        createdAt: documentsTable.createdAt,
+        uploaderName: appUsersTable.name,
+      })
+      .from(documentsTable)
+      .leftJoin(appUsersTable, eq(documentsTable.uploadedBy, appUsersTable.id))
+      .where(sql`(${documentsTable.title} || ' ' || ${documentsTable.extractedText}) ILIKE ${ilikePattern}`)
+      .orderBy(desc(documentsTable.createdAt))
+      .limit(limit)
+      .offset(offset);
+  } else {
+    results = await db
+      .select({
+        id: documentsTable.id,
+        title: documentsTable.title,
+        fileName: documentsTable.fileName,
+        snippet: sql<string>`ts_headline('simple', ${documentsTable.extractedText}, ${tsQuery}, 'MaxWords=50, MinWords=20, StartSel=<mark>, StopSel=</mark>')`,
+        rank: sql<number>`ts_rank(${documentsTable.searchVector}, ${tsQuery})`,
+        createdAt: documentsTable.createdAt,
+        uploaderName: appUsersTable.name,
+      })
+      .from(documentsTable)
+      .leftJoin(appUsersTable, eq(documentsTable.uploadedBy, appUsersTable.id))
+      .where(sql`${documentsTable.searchVector} @@ ${tsQuery}`)
+      .orderBy(sql`ts_rank(${documentsTable.searchVector}, ${tsQuery}) DESC`)
+      .limit(limit)
+      .offset(offset);
+  }
 
   res.json({
     results,

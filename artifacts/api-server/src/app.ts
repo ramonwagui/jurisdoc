@@ -1,11 +1,16 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import morgan from "morgan";
 import { authMiddleware } from "./middlewares/authMiddleware";
 import { appUserMiddleware } from "./middlewares/appUserMiddleware";
 import router from "./routes";
 
 const app: Express = express();
+
+if (process.env.NODE_ENV !== "production") {
+  app.use(morgan("dev"));
+}
 
 const allowedOrigins = new Set(
   [

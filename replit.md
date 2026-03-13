@@ -75,7 +75,7 @@ First user to log in is auto-created as admin.
 - `POST /api/users` — Create user (admin only)
 - `PATCH /api/users/:id` — Update user (admin only)
 - `GET /api/documents` — List documents (paginated)
-- `GET /api/documents/search?q=...` — Full-text search (Portuguese tsquery)
+- `GET /api/documents/search?q=...` — Full-text search (dual portuguese+simple tsquery, ILIKE fallback)
 - `GET /api/documents/:id` — Get document detail
 - `DELETE /api/documents/:id` — Delete document (owner or admin)
 - `POST /api/documents/:id/chat` — SSE stream AI chat with document
@@ -100,7 +100,8 @@ First user to log in is auto-created as admin.
 - Gemini chat maps DB `assistant` role to API `model` role
 - SSE chat uses POST + ReadableStream (not EventSource) since body is required
 - CORS locked to Replit domains only
-- Portuguese full-text search with GIN index for fast lookups
+- Dual-dictionary full-text search (portuguese + simple) with GIN index; ILIKE fallback when tsvector returns 0 results
+- HTTP request logging via morgan (dev mode only)
 - Server-side text extraction ensures integrity (client cannot tamper with extracted text)
 
 ## TypeScript & Composite Projects

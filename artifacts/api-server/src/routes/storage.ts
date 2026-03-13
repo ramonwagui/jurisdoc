@@ -126,7 +126,7 @@ router.post("/storage/upload-document", upload.single("file"), async (req: Reque
         storagePath: objectPath,
         mimeType: validatedMimeType,
         extractedText,
-        searchVector: sql`to_tsvector('portuguese', ${title} || ' ' || ${extractedText})`,
+        searchVector: sql`to_tsvector('portuguese', ${title} || ' ' || ${extractedText}) || to_tsvector('simple', ${title} || ' ' || ${extractedText})`,
       })
       .returning();
 
