@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "wouter";
 import { useGetProcesso, useUpdateProcesso, useCreateAndamento, useDeleteAndamento, useListUsers, getGetProcessoQueryKey } from "@workspace/api-client-react";
-import type { Andamento } from "@workspace/api-client-react";
+import type { Andamento, ProcessoDetail as ProcessoDetailType, CreateAndamentoBodyTipo } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout";
 import { Card, Button, Input } from "@/components/ui-components";
 import { statusLabels, statusColors, areaLabels, areaColors } from "./processos";
@@ -92,7 +92,7 @@ export default function ProcessoDetail() {
     );
   }
 
-  const andamentos: Andamento[] = (processo as any).andamentos ?? [];
+  const andamentos: Andamento[] = (processo as ProcessoDetailType).andamentos ?? [];
 
   return (
     <Layout>
@@ -156,9 +156,9 @@ export default function ProcessoDetail() {
               <InfoItem label="Advogado" value={processo.advogadoNome || "—"} />
             </div>
 
-            {(processo as any).clienteTelefone && (
+            {processo.clienteTelefone && (
               <div className="mt-4">
-                <InfoItem label="Telefone" value={(processo as any).clienteTelefone} />
+                <InfoItem label="Telefone" value={processo.clienteTelefone} />
               </div>
             )}
 
@@ -302,7 +302,7 @@ function NewAndamentoForm({ processoId }: { processoId: number }) {
       await createMutation.mutateAsync({
         id: processoId,
         data: {
-          tipo: tipo as any,
+          tipo: tipo as CreateAndamentoBodyTipo,
           conteudo: conteudo.trim(),
           visivelCliente,
           ...(dataEvento ? { dataEvento } : {}),
