@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useGetCurrentUser } from "@workspace/api-client-react";
-import { Scale, LogOut, FileText, ShieldAlert, User as UserIcon, Menu, X } from "lucide-react";
+import { Scale, LogOut, FileText, ShieldAlert, User as UserIcon, Menu, X, Briefcase } from "lucide-react";
 import { Button } from "./ui-components";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -14,6 +14,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { href: "/", label: "Documentos", icon: <FileText className="w-4 h-4" /> },
+    { href: "/processos", label: "Processos", icon: <Briefcase className="w-4 h-4" /> },
     ...(user?.role === "admin"
       ? [{ href: "/admin", label: "Administração", icon: <ShieldAlert className="w-4 h-4" /> }]
       : []),
@@ -35,7 +36,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
             <nav className="hidden md:flex items-center gap-1 bg-secondary p-1 rounded-xl">
               {navItems.map((item) => (
-                <NavLink key={item.href} href={item.href} active={location === item.href} icon={item.icon}>
+                <NavLink key={item.href} href={item.href} active={item.href === "/" ? location === "/" : location.startsWith(item.href)} icon={item.icon}>
                   {item.label}
                 </NavLink>
               ))}
@@ -95,7 +96,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                      location === item.href
+                      (item.href === "/" ? location === "/" : location.startsWith(item.href))
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                     }`}

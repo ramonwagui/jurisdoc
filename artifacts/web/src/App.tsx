@@ -10,6 +10,9 @@ import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import DocumentDetail from "@/pages/document-detail";
 import AdminPanel from "@/pages/admin";
+import Processos from "@/pages/processos";
+import ProcessoDetail from "@/pages/processo-detail";
+import Consulta from "@/pages/consulta";
 
 const queryClient = new QueryClient();
 
@@ -40,8 +43,11 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
+      <Route path="/consulta" component={Consulta} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/document/:id" component={() => <ProtectedRoute component={DocumentDetail} />} />
+      <Route path="/processos" component={() => <ProtectedRoute component={Processos} />} />
+      <Route path="/processos/:id" component={() => <ProtectedRoute component={ProcessoDetail} />} />
       <Route path="/admin" component={() => <ProtectedRoute component={AdminPanel} adminOnly />} />
       <Route component={NotFound} />
     </Switch>

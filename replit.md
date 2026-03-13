@@ -115,6 +115,9 @@ First admin is created via the Setup page on first visit (shows when no password
 - `/login` — Login page with email/password form; auto-detects first-setup mode
 - `/` — Dashboard (document list + search + category filter chips + upload modal with category selection; documents show category badges)
 - `/document/:id` — Document detail with PDF viewer + AI chat panel
+- `/processos` — Legal case list with search, status/area filters, new process modal. Admin sees all; advogado sees own.
+- `/processos/:id` — Case detail with info header (inline status change dropdown), vertical timeline of andamentos with tipo/visibility badges, inline new andamento form
+- `/consulta` — **PUBLIC** (no login required) AI-powered case consultation page. Client enters CPF or case number + optional question, receives AI response with process info.
 - `/admin` — Admin panel: user management + categories management (create, rename, delete)
 
 ## Document Upload Flow
