@@ -14,16 +14,16 @@ export default function PendingAccess() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md text-center"
       >
-        <div className="w-20 h-20 mx-auto rounded-2xl gold-gradient-bg flex items-center justify-center mb-8 shadow-lg shadow-primary/30">
-          <Scale className="w-10 h-10 text-primary-foreground" />
+        <div className="w-16 h-16 mx-auto rounded-xl brand-gradient-bg flex items-center justify-center mb-8 shadow-sm">
+          <Scale className="w-8 h-8 text-white" />
         </div>
 
-        <div className="glass-panel rounded-3xl p-8 mb-6">
-          <div className="w-16 h-16 mx-auto rounded-full bg-amber-500/10 flex items-center justify-center mb-6">
-            <Clock className="w-8 h-8 text-amber-400" />
+        <div className="bg-card rounded-2xl p-8 mb-6 border border-border shadow-sm">
+          <div className="w-14 h-14 mx-auto rounded-full bg-amber-50 flex items-center justify-center mb-6">
+            <Clock className="w-7 h-7 text-amber-600" />
           </div>
 
-          <h1 className="text-2xl font-display font-bold text-white mb-3">
+          <h1 className="text-2xl font-display font-bold text-foreground mb-3">
             Acesso Pendente
           </h1>
           <p className="text-muted-foreground leading-relaxed mb-6">
@@ -37,7 +37,7 @@ export default function PendingAccess() {
         <Button
           variant="ghost"
           onClick={() => logout()}
-          className="text-muted-foreground hover:text-white"
+          className="text-muted-foreground hover:text-foreground"
         >
           <LogOut className="w-4 h-4 mr-2" />
           Sair e voltar ao login

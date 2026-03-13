@@ -11,18 +11,18 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", isLoading, children, disabled, ...props }, ref) => {
     const variants = {
-      primary: "bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md",
-      secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border/50",
-      outline: "border-2 border-border bg-transparent hover:bg-secondary text-foreground",
+      primary: "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm",
+      secondary: "bg-secondary text-secondary-foreground hover:bg-accent border border-border",
+      outline: "border border-border bg-transparent hover:bg-secondary text-foreground",
       ghost: "bg-transparent hover:bg-secondary text-foreground",
-      destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-lg shadow-destructive/20"
+      destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm"
     };
 
     const sizes = {
       sm: "h-9 px-4 text-sm",
       md: "h-11 px-6 text-base",
-      lg: "h-14 px-8 text-lg",
-      icon: "h-11 w-11 flex items-center justify-center p-0"
+      lg: "h-12 px-8 text-base",
+      icon: "h-10 w-10 flex items-center justify-center p-0"
     };
 
     return (
@@ -30,7 +30,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || isLoading}
         className={cn(
-          "inline-flex items-center justify-center rounded-xl font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:pointer-events-none",
+          "inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
           variants[variant],
           sizes[size],
           className
@@ -51,7 +51,7 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
       <input
         ref={ref}
         className={cn(
-          "flex h-12 w-full rounded-xl border border-border bg-input/50 px-4 py-2 text-sm text-foreground shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+          "flex h-11 w-full rounded-lg border border-border bg-card px-4 py-2 text-sm text-foreground shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50",
           className
         )}
         {...props}
@@ -62,7 +62,7 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
 Input.displayName = "Input";
 
 export const Card = ({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("glass-panel rounded-2xl p-6", className)} {...props}>
+  <div className={cn("glass-panel rounded-xl p-6", className)} {...props}>
     {children}
   </div>
 );

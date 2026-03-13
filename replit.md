@@ -94,6 +94,15 @@ First user to log in is auto-created as admin.
 3. Server extracts text using pdf-parse (PDF) or mammoth (DOCX)
 4. Server creates document record atomically with extracted text
 
+## Design System
+
+- **Theme**: Light professional theme — white/off-white backgrounds, deep navy blue primary (#1E3A5F range via HSL)
+- **Fonts**: Inter (body/sans-serif) + Instrument Serif (headings/display) via Google Fonts
+- **CSS variables**: All colors defined as HSL CSS custom properties in `:root` within `index.css`
+- **Brand accent**: Gold gradient preserved only for logo icon and AI bot avatar (brand-gradient-bg / brand-gradient-text utilities)
+- **Components**: Button, Input, Card in `ui-components.tsx` — use semantic color classes (text-foreground, text-muted-foreground, bg-card, etc.)
+- **No dark theme**: Single light theme only
+
 ## Key Design Decisions
 
 - `app_users.id` (serial int) is used as FK for documents, separate from auth `users.id` (varchar UUID)

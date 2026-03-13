@@ -1,12 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: 'DM Sans', sans-serif;
-  --font-display: 'Playfair Display', serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Instrument Serif', Georgia, serif;
 
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
+  --color-muted-foreground: hsl(var(--muted-foreground));
   
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
@@ -34,30 +35,33 @@
 }
 
 :root {
-  /* Deep Navy & Gold Luxury Legal Theme */
-  --background: 226 60% 6%;
-  --foreground: 210 40% 98%;
+  --background: 210 20% 98%;
+  --foreground: 220 30% 12%;
+  --muted-foreground: 220 10% 46%;
   
-  --card: 226 50% 9%;
-  --card-foreground: 210 40% 98%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 30% 12%;
   
-  --primary: 43 74% 50%; /* Gold */
-  --primary-foreground: 226 60% 6%;
+  --primary: 222 60% 28%;
+  --primary-foreground: 0 0% 100%;
   
-  --secondary: 226 40% 15%;
-  --secondary-foreground: 210 40% 98%;
+  --secondary: 220 14% 96%;
+  --secondary-foreground: 220 30% 12%;
   
-  --accent: 226 50% 20%;
-  --accent-foreground: 43 74% 50%;
+  --accent: 220 14% 92%;
+  --accent-foreground: 222 60% 28%;
   
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
   
-  --border: 226 40% 18%;
-  --input: 226 40% 15%;
-  --ring: 43 74% 50%;
+  --border: 220 13% 90%;
+  --input: 220 14% 96%;
+  --ring: 222 60% 28%;
   
   --radius: 0.75rem;
+
+  --color-brand-gold: #B8860B;
+  --color-brand-gold-light: #DAA520;
 }
 
 @layer base {
@@ -66,11 +70,7 @@
   }
   
   body {
-    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/30 selection:text-primary-foreground;
-    background-image: 
-      radial-gradient(circle at 15% 50%, hsl(226 50% 12%), transparent 25%),
-      radial-gradient(circle at 85% 30%, hsl(226 50% 12%), transparent 25%);
-    background-attachment: fixed;
+    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/15 selection:text-primary;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -80,19 +80,19 @@
 
 @layer utilities {
   .glass-panel {
-    @apply bg-card/60 backdrop-blur-xl border border-border/50 shadow-2xl shadow-black/40;
+    @apply bg-card border border-border shadow-sm;
   }
   
-  .gold-gradient-text {
-    @apply bg-gradient-to-br from-[#FDE047] via-[#D4AF37] to-[#A16207] bg-clip-text text-transparent;
+  .brand-gradient-text {
+    @apply bg-gradient-to-r from-[var(--color-brand-gold)] to-[var(--color-brand-gold-light)] bg-clip-text text-transparent;
   }
   
-  .gold-gradient-bg {
-    @apply bg-gradient-to-br from-[#FDE047] via-[#D4AF37] to-[#A16207];
+  .brand-gradient-bg {
+    @apply bg-gradient-to-br from-[var(--color-brand-gold)] to-[var(--color-brand-gold-light)];
   }
 
   .hover-lift {
-    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10;
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:shadow-black/5;
   }
   
   .scrollbar-thin::-webkit-scrollbar {
@@ -103,7 +103,7 @@
     background: transparent;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    @apply bg-secondary rounded-full;
+    @apply bg-border rounded-full;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     @apply bg-accent;

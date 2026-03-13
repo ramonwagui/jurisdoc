@@ -60,18 +60,18 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
             <motion.h1 
               initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-              className="text-4xl md:text-5xl font-display font-bold text-white mb-4"
+              className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2"
             >
               Acervo Jurídico
             </motion.h1>
             <motion.p 
               initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
-              className="text-lg text-muted-foreground max-w-2xl"
+              className="text-base text-muted-foreground max-w-2xl"
             >
               Gerencie, busque e analise seus documentos com o poder da Inteligência Artificial.
             </motion.p>
@@ -86,32 +86,32 @@ export default function Dashboard() {
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="relative max-w-3xl mb-12 group"
+          className="relative max-w-3xl mb-10 group"
         >
-          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-            <Search className="h-6 w-6 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
           </div>
           <Input
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Pesquisar por termos, processos, partes envolvidas..."
-            className="pl-14 h-16 text-lg rounded-2xl bg-secondary/80 border-2 border-border focus-visible:border-primary shadow-inner"
+            className="pl-12 h-12 text-base rounded-xl"
           />
         </motion.div>
 
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-medium text-white flex items-center gap-2">
+            <h2 className="text-lg font-medium text-foreground flex items-center gap-2">
               {isSearching ? "Resultados da Busca" : "Documentos Recentes"}
-              {isLoading && <span className="flex h-3 w-3 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span></span>}
+              {isLoading && <span className="flex h-2.5 w-2.5 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span><span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span></span>}
             </h2>
-            <span className="text-sm text-muted-foreground bg-secondary px-3 py-1 rounded-full">
+            <span className="text-sm text-muted-foreground bg-secondary px-3 py-1 rounded-full border border-border">
               {total} encontrados
             </span>
           </div>
 
           {documents.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               <AnimatePresence>
                 {documents.map((doc, i) => (
                   <motion.div
@@ -123,17 +123,17 @@ export default function Dashboard() {
                     <Link href={`/document/${doc.id}`}>
                       <Card className="h-full cursor-pointer hover-lift group relative overflow-hidden flex flex-col">
                         <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0">
-                          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                            <ChevronRight className="w-5 h-5 text-primary" />
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <ChevronRight className="w-4 h-4 text-primary" />
                           </div>
                         </div>
                         
-                        <div className="flex items-start gap-4 mb-4">
-                          <div className="p-3 rounded-xl bg-secondary border border-border/50 text-primary">
-                            <FileText className="w-6 h-6" />
+                        <div className="flex items-start gap-3 mb-4">
+                          <div className="p-2.5 rounded-lg bg-secondary border border-border text-primary">
+                            <FileText className="w-5 h-5" />
                           </div>
                           <div className="flex-1 min-w-0 pr-8">
-                            <h3 className="text-lg font-display font-semibold text-white truncate" title={doc.title}>
+                            <h3 className="text-base font-display font-semibold text-foreground truncate" title={doc.title}>
                               {doc.title}
                             </h3>
                             <p className="text-sm text-muted-foreground truncate">{doc.fileName}</p>
@@ -141,20 +141,20 @@ export default function Dashboard() {
                         </div>
                         
                         {doc.snippet && (
-                          <div className="mb-6 flex-1">
-                            <div className="text-sm text-gray-300 bg-background/50 p-4 rounded-xl border border-border/50 leading-relaxed italic line-clamp-3">
+                          <div className="mb-4 flex-1">
+                            <div className="text-sm text-muted-foreground bg-secondary/60 p-3 rounded-lg border border-border leading-relaxed italic line-clamp-3">
                               "{doc.snippet.replace(/<\/?mark>/g, '')}"
                             </div>
                           </div>
                         )}
                         
-                        <div className="mt-auto pt-4 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
+                        <div className="mt-auto pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
                           <div className="flex items-center gap-1.5">
                             <Calendar className="w-3.5 h-3.5" />
                             {formatDate(doc.createdAt)}
                           </div>
                           {doc.uploaderName && (
-                            <span className="bg-secondary px-2 py-1 rounded-md">
+                            <span className="bg-secondary px-2 py-0.5 rounded-md border border-border">
                               Por {doc.uploaderName}
                             </span>
                           )}
@@ -166,9 +166,9 @@ export default function Dashboard() {
               </AnimatePresence>
             </div>
           ) : !isLoading ? (
-            <div className="text-center py-24 glass-panel rounded-3xl border-dashed">
-              <FileText className="w-16 h-16 mx-auto text-muted-foreground mb-4 opacity-50" />
-              <h3 className="text-xl font-medium text-white mb-2">Nenhum documento encontrado</h3>
+            <div className="text-center py-20 bg-card rounded-2xl border-2 border-dashed border-border">
+              <FileText className="w-14 h-14 mx-auto text-muted-foreground mb-4 opacity-50" />
+              <h3 className="text-lg font-medium text-foreground mb-2">Nenhum documento encontrado</h3>
               <p className="text-muted-foreground">
                 {isSearching 
                   ? "Tente usar termos diferentes." 

@@ -63,24 +63,24 @@ export default function AdminPanel() {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
           <div>
-            <h1 className="text-4xl font-display font-bold text-white mb-3 flex items-center gap-3">
-              <ShieldCheck className="w-10 h-10 text-primary" />
+            <h1 className="text-3xl font-display font-bold text-foreground mb-2 flex items-center gap-3">
+              <ShieldCheck className="w-8 h-8 text-primary" />
               Administração
             </h1>
             <p className="text-muted-foreground">Gerencie o acesso e as permissões da equipe jurídica.</p>
           </div>
-          <Button onClick={openNewUserDialog} size="lg" className="shadow-primary/20">
+          <Button onClick={openNewUserDialog} size="lg">
             <UserPlus className="w-5 h-5 mr-2" />
             Adicionar Usuário
           </Button>
         </div>
 
-        <Card className="p-0 overflow-hidden bg-secondary/20">
-          <div className="p-6 border-b border-border/50 bg-background/50 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <h2 className="text-xl font-medium text-white">Usuários do Sistema</h2>
+        <Card className="p-0 overflow-hidden">
+          <div className="p-5 border-b border-border flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h2 className="text-lg font-medium text-foreground">Usuários do Sistema</h2>
             <div className="relative w-full sm:w-72">
               <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input 
@@ -95,15 +95,15 @@ export default function AdminPanel() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-border/50 bg-secondary/30 text-muted-foreground text-sm uppercase tracking-wider">
-                  <th className="px-6 py-4 font-medium">Nome</th>
-                  <th className="px-6 py-4 font-medium">Papel</th>
-                  <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium">Data de Cadastro</th>
-                  <th className="px-6 py-4 font-medium text-right">Ações</th>
+                <tr className="border-b border-border bg-secondary text-muted-foreground text-sm uppercase tracking-wider">
+                  <th className="px-6 py-3.5 font-medium">Nome</th>
+                  <th className="px-6 py-3.5 font-medium">Papel</th>
+                  <th className="px-6 py-3.5 font-medium">Status</th>
+                  <th className="px-6 py-3.5 font-medium">Data de Cadastro</th>
+                  <th className="px-6 py-3.5 font-medium text-right">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/30">
+              <tbody className="divide-y divide-border">
                 {isLoading ? (
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-muted-foreground">
@@ -118,23 +118,23 @@ export default function AdminPanel() {
                   </tr>
                 ) : (
                   filteredUsers?.map((user) => (
-                    <tr key={user.id} className="hover:bg-secondary/40 transition-colors">
+                    <tr key={user.id} className="hover:bg-secondary/50 transition-colors">
                       <td className="px-6 py-4">
-                        <div className="font-medium text-white">{user.name}</div>
+                        <div className="font-medium text-foreground">{user.name}</div>
                         <div className="text-sm text-muted-foreground">{user.email || 'Sem email'}</div>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
                           user.role === 'admin' 
-                            ? 'bg-primary/10 text-primary border-primary/30' 
-                            : 'bg-blue-500/10 text-blue-400 border-blue-500/30'
+                            ? 'bg-primary/10 text-primary border-primary/20' 
+                            : 'bg-blue-50 text-blue-700 border-blue-200'
                         }`}>
                           {user.role}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         {user.active ? (
-                          <span className="flex items-center gap-1.5 text-emerald-400 text-sm">
+                          <span className="flex items-center gap-1.5 text-emerald-600 text-sm">
                             <CheckCircle2 className="w-4 h-4" /> Ativo
                           </span>
                         ) : (
@@ -154,7 +154,7 @@ export default function AdminPanel() {
                           variant="ghost" 
                           size="sm" 
                           onClick={() => toggleActive(user)}
-                          className={user.active ? "hover:text-destructive" : "hover:text-emerald-400"}
+                          className={user.active ? "hover:text-destructive" : "hover:text-emerald-600"}
                         >
                           <Power className="w-4 h-4 mr-1" />
                           {user.active ? "Desativar" : "Ativar"}
@@ -242,12 +242,12 @@ function UserDialog({ isOpen, onClose, user }: { isOpen: boolean, onClose: () =>
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-foreground/20 backdrop-blur-sm" onClick={onClose} />
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        className="relative w-full max-w-md glass-panel rounded-3xl p-8 shadow-2xl"
+        className="relative w-full max-w-md bg-card rounded-2xl p-8 shadow-xl border border-border"
       >
-        <h2 className="text-2xl font-display font-semibold text-white mb-6">
+        <h2 className="text-2xl font-display font-semibold text-foreground mb-6">
           {isEditing ? 'Editar Usuário' : 'Novo Usuário'}
         </h2>
 
@@ -276,7 +276,7 @@ function UserDialog({ isOpen, onClose, user }: { isOpen: boolean, onClose: () =>
             <label className="block text-sm font-medium text-muted-foreground mb-1.5">Nível de Acesso</label>
             <select 
               {...register("role")}
-              className="w-full h-12 rounded-xl border border-border bg-input/50 px-4 text-white focus:ring-2 focus:ring-primary outline-none"
+              className="w-full h-11 rounded-lg border border-border bg-card px-4 text-foreground focus:ring-2 focus:ring-primary outline-none text-sm"
             >
               <option value="advogado">Advogado (Acesso Padrão)</option>
               <option value="admin">Administrador (Acesso Total)</option>
