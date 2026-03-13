@@ -17,22 +17,33 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  Andamento,
   AppUser,
   AuthUserEnvelope,
   Category,
   ChatMessageBody,
+  ConsultarProcessoBody,
+  ConsultarProcessoResponse,
+  CreateAndamentoBody,
   CreateCategoryBody,
+  CreateProcessoBody,
   CreateUserBody,
   Document,
   DocumentListResponse,
   ErrorEnvelope,
   HealthStatus,
   ListDocumentsParams,
+  ListProcessosParams,
   LoginBody,
+  Processo,
+  ProcessoDetail,
+  ProcessoListResponse,
   SearchDocumentsParams,
   SearchResultsResponse,
   SetupBody,
   SetupStatus,
+  UpdateAndamentoBody,
+  UpdateProcessoBody,
   UpdateUserBody,
   UploadDocumentBody,
   UploadUrlRequest,
@@ -1966,4 +1977,788 @@ export const useChatWithDocument = <
   TContext
 > => {
   return useMutation(getChatWithDocumentMutationOptions(options));
+};
+
+/**
+ * @summary List legal cases with pagination and filters
+ */
+export const getListProcessosUrl = (params?: ListProcessosParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/processos?${stringifiedParams}`
+    : `/api/processos`;
+};
+
+export const listProcessos = async (
+  params?: ListProcessosParams,
+  options?: RequestInit,
+): Promise<ProcessoListResponse> => {
+  return customFetch<ProcessoListResponse>(getListProcessosUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListProcessosQueryKey = (params?: ListProcessosParams) => {
+  return [`/api/processos`, ...(params ? [params] : [])] as const;
+};
+
+export const getListProcessosQueryOptions = <
+  TData = Awaited<ReturnType<typeof listProcessos>>,
+  TError = ErrorType<ErrorEnvelope>,
+>(
+  params?: ListProcessosParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listProcessos>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListProcessosQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listProcessos>>> = ({
+    signal,
+  }) => listProcessos(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listProcessos>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListProcessosQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listProcessos>>
+>;
+export type ListProcessosQueryError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary List legal cases with pagination and filters
+ */
+
+export function useListProcessos<
+  TData = Awaited<ReturnType<typeof listProcessos>>,
+  TError = ErrorType<ErrorEnvelope>,
+>(
+  params?: ListProcessosParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listProcessos>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListProcessosQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a new legal case
+ */
+export const getCreateProcessoUrl = () => {
+  return `/api/processos`;
+};
+
+export const createProcesso = async (
+  createProcessoBody: CreateProcessoBody,
+  options?: RequestInit,
+): Promise<Processo> => {
+  return customFetch<Processo>(getCreateProcessoUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createProcessoBody),
+  });
+};
+
+export const getCreateProcessoMutationOptions = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createProcesso>>,
+    TError,
+    { data: BodyType<CreateProcessoBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createProcesso>>,
+  TError,
+  { data: BodyType<CreateProcessoBody> },
+  TContext
+> => {
+  const mutationKey = ["createProcesso"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createProcesso>>,
+    { data: BodyType<CreateProcessoBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createProcesso(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateProcessoMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createProcesso>>
+>;
+export type CreateProcessoMutationBody = BodyType<CreateProcessoBody>;
+export type CreateProcessoMutationError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary Create a new legal case
+ */
+export const useCreateProcesso = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createProcesso>>,
+    TError,
+    { data: BodyType<CreateProcessoBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createProcesso>>,
+  TError,
+  { data: BodyType<CreateProcessoBody> },
+  TContext
+> => {
+  return useMutation(getCreateProcessoMutationOptions(options));
+};
+
+/**
+ * @summary AI-powered public case consultation by CPF or case number
+ */
+export const getConsultarProcessoUrl = () => {
+  return `/api/processos/consultar`;
+};
+
+export const consultarProcesso = async (
+  consultarProcessoBody: ConsultarProcessoBody,
+  options?: RequestInit,
+): Promise<ConsultarProcessoResponse> => {
+  return customFetch<ConsultarProcessoResponse>(getConsultarProcessoUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(consultarProcessoBody),
+  });
+};
+
+export const getConsultarProcessoMutationOptions = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof consultarProcesso>>,
+    TError,
+    { data: BodyType<ConsultarProcessoBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof consultarProcesso>>,
+  TError,
+  { data: BodyType<ConsultarProcessoBody> },
+  TContext
+> => {
+  const mutationKey = ["consultarProcesso"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof consultarProcesso>>,
+    { data: BodyType<ConsultarProcessoBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return consultarProcesso(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ConsultarProcessoMutationResult = NonNullable<
+  Awaited<ReturnType<typeof consultarProcesso>>
+>;
+export type ConsultarProcessoMutationBody = BodyType<ConsultarProcessoBody>;
+export type ConsultarProcessoMutationError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary AI-powered public case consultation by CPF or case number
+ */
+export const useConsultarProcesso = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof consultarProcesso>>,
+    TError,
+    { data: BodyType<ConsultarProcessoBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof consultarProcesso>>,
+  TError,
+  { data: BodyType<ConsultarProcessoBody> },
+  TContext
+> => {
+  return useMutation(getConsultarProcessoMutationOptions(options));
+};
+
+/**
+ * @summary Get case details with timeline
+ */
+export const getGetProcessoUrl = (id: number) => {
+  return `/api/processos/${id}`;
+};
+
+export const getProcesso = async (
+  id: number,
+  options?: RequestInit,
+): Promise<ProcessoDetail> => {
+  return customFetch<ProcessoDetail>(getGetProcessoUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetProcessoQueryKey = (id: number) => {
+  return [`/api/processos/${id}`] as const;
+};
+
+export const getGetProcessoQueryOptions = <
+  TData = Awaited<ReturnType<typeof getProcesso>>,
+  TError = ErrorType<ErrorEnvelope>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getProcesso>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetProcessoQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getProcesso>>> = ({
+    signal,
+  }) => getProcesso(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getProcesso>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetProcessoQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getProcesso>>
+>;
+export type GetProcessoQueryError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary Get case details with timeline
+ */
+
+export function useGetProcesso<
+  TData = Awaited<ReturnType<typeof getProcesso>>,
+  TError = ErrorType<ErrorEnvelope>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getProcesso>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetProcessoQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update a legal case
+ */
+export const getUpdateProcessoUrl = (id: number) => {
+  return `/api/processos/${id}`;
+};
+
+export const updateProcesso = async (
+  id: number,
+  updateProcessoBody: UpdateProcessoBody,
+  options?: RequestInit,
+): Promise<Processo> => {
+  return customFetch<Processo>(getUpdateProcessoUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateProcessoBody),
+  });
+};
+
+export const getUpdateProcessoMutationOptions = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateProcesso>>,
+    TError,
+    { id: number; data: BodyType<UpdateProcessoBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateProcesso>>,
+  TError,
+  { id: number; data: BodyType<UpdateProcessoBody> },
+  TContext
+> => {
+  const mutationKey = ["updateProcesso"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateProcesso>>,
+    { id: number; data: BodyType<UpdateProcessoBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateProcesso(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateProcessoMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateProcesso>>
+>;
+export type UpdateProcessoMutationBody = BodyType<UpdateProcessoBody>;
+export type UpdateProcessoMutationError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary Update a legal case
+ */
+export const useUpdateProcesso = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateProcesso>>,
+    TError,
+    { id: number; data: BodyType<UpdateProcessoBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateProcesso>>,
+  TError,
+  { id: number; data: BodyType<UpdateProcessoBody> },
+  TContext
+> => {
+  return useMutation(getUpdateProcessoMutationOptions(options));
+};
+
+/**
+ * @summary Delete a legal case (admin only)
+ */
+export const getDeleteProcessoUrl = (id: number) => {
+  return `/api/processos/${id}`;
+};
+
+export const deleteProcesso = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteProcessoUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteProcessoMutationOptions = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteProcesso>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteProcesso>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteProcesso"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteProcesso>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteProcesso(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteProcessoMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteProcesso>>
+>;
+
+export type DeleteProcessoMutationError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary Delete a legal case (admin only)
+ */
+export const useDeleteProcesso = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteProcesso>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteProcesso>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteProcessoMutationOptions(options));
+};
+
+/**
+ * @summary Add a timeline entry to a case
+ */
+export const getCreateAndamentoUrl = (id: number) => {
+  return `/api/processos/${id}/andamentos`;
+};
+
+export const createAndamento = async (
+  id: number,
+  createAndamentoBody: CreateAndamentoBody,
+  options?: RequestInit,
+): Promise<Andamento> => {
+  return customFetch<Andamento>(getCreateAndamentoUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createAndamentoBody),
+  });
+};
+
+export const getCreateAndamentoMutationOptions = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAndamento>>,
+    TError,
+    { id: number; data: BodyType<CreateAndamentoBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createAndamento>>,
+  TError,
+  { id: number; data: BodyType<CreateAndamentoBody> },
+  TContext
+> => {
+  const mutationKey = ["createAndamento"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createAndamento>>,
+    { id: number; data: BodyType<CreateAndamentoBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return createAndamento(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateAndamentoMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createAndamento>>
+>;
+export type CreateAndamentoMutationBody = BodyType<CreateAndamentoBody>;
+export type CreateAndamentoMutationError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary Add a timeline entry to a case
+ */
+export const useCreateAndamento = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAndamento>>,
+    TError,
+    { id: number; data: BodyType<CreateAndamentoBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createAndamento>>,
+  TError,
+  { id: number; data: BodyType<CreateAndamentoBody> },
+  TContext
+> => {
+  return useMutation(getCreateAndamentoMutationOptions(options));
+};
+
+/**
+ * @summary Update a timeline entry
+ */
+export const getUpdateAndamentoUrl = (id: number, andId: number) => {
+  return `/api/processos/${id}/andamentos/${andId}`;
+};
+
+export const updateAndamento = async (
+  id: number,
+  andId: number,
+  updateAndamentoBody: UpdateAndamentoBody,
+  options?: RequestInit,
+): Promise<Andamento> => {
+  return customFetch<Andamento>(getUpdateAndamentoUrl(id, andId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateAndamentoBody),
+  });
+};
+
+export const getUpdateAndamentoMutationOptions = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAndamento>>,
+    TError,
+    { id: number; andId: number; data: BodyType<UpdateAndamentoBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateAndamento>>,
+  TError,
+  { id: number; andId: number; data: BodyType<UpdateAndamentoBody> },
+  TContext
+> => {
+  const mutationKey = ["updateAndamento"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateAndamento>>,
+    { id: number; andId: number; data: BodyType<UpdateAndamentoBody> }
+  > = (props) => {
+    const { id, andId, data } = props ?? {};
+
+    return updateAndamento(id, andId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateAndamentoMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateAndamento>>
+>;
+export type UpdateAndamentoMutationBody = BodyType<UpdateAndamentoBody>;
+export type UpdateAndamentoMutationError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary Update a timeline entry
+ */
+export const useUpdateAndamento = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAndamento>>,
+    TError,
+    { id: number; andId: number; data: BodyType<UpdateAndamentoBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateAndamento>>,
+  TError,
+  { id: number; andId: number; data: BodyType<UpdateAndamentoBody> },
+  TContext
+> => {
+  return useMutation(getUpdateAndamentoMutationOptions(options));
+};
+
+/**
+ * @summary Delete a timeline entry
+ */
+export const getDeleteAndamentoUrl = (id: number, andId: number) => {
+  return `/api/processos/${id}/andamentos/${andId}`;
+};
+
+export const deleteAndamento = async (
+  id: number,
+  andId: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteAndamentoUrl(id, andId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteAndamentoMutationOptions = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAndamento>>,
+    TError,
+    { id: number; andId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteAndamento>>,
+  TError,
+  { id: number; andId: number },
+  TContext
+> => {
+  const mutationKey = ["deleteAndamento"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteAndamento>>,
+    { id: number; andId: number }
+  > = (props) => {
+    const { id, andId } = props ?? {};
+
+    return deleteAndamento(id, andId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteAndamentoMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAndamento>>
+>;
+
+export type DeleteAndamentoMutationError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary Delete a timeline entry
+ */
+export const useDeleteAndamento = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAndamento>>,
+    TError,
+    { id: number; andId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteAndamento>>,
+  TError,
+  { id: number; andId: number },
+  TContext
+> => {
+  return useMutation(getDeleteAndamentoMutationOptions(options));
 };

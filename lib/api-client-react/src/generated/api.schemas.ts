@@ -195,6 +195,221 @@ export interface ChatMessageBody {
   history?: ChatHistoryMessage[];
 }
 
+export type ProcessoArea = (typeof ProcessoArea)[keyof typeof ProcessoArea];
+
+export const ProcessoArea = {
+  civil: "civil",
+  criminal: "criminal",
+  trabalhista: "trabalhista",
+  previdenciario: "previdenciario",
+  familia: "familia",
+  empresarial: "empresarial",
+  outro: "outro",
+} as const;
+
+export type ProcessoStatus =
+  (typeof ProcessoStatus)[keyof typeof ProcessoStatus];
+
+export const ProcessoStatus = {
+  em_andamento: "em_andamento",
+  aguardando_decisao: "aguardando_decisao",
+  recurso: "recurso",
+  encerrado: "encerrado",
+} as const;
+
+export interface Processo {
+  id: number;
+  numero: string;
+  titulo: string;
+  clienteNome: string;
+  clienteCpf: string;
+  /** @nullable */
+  clienteTelefone?: string | null;
+  area: ProcessoArea;
+  status: ProcessoStatus;
+  /** @nullable */
+  descricao?: string | null;
+  advogadoId: number;
+  advogadoNome?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProcessoListResponse {
+  processos: Processo[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export type AndamentoTipo = (typeof AndamentoTipo)[keyof typeof AndamentoTipo];
+
+export const AndamentoTipo = {
+  andamento: "andamento",
+  parecer: "parecer",
+  audiencia: "audiencia",
+  prazo: "prazo",
+  recurso: "recurso",
+  encerramento: "encerramento",
+  outro: "outro",
+} as const;
+
+export interface Andamento {
+  id: number;
+  processoId: number;
+  autorId: number;
+  autorNome?: string;
+  tipo: AndamentoTipo;
+  conteudo: string;
+  visivelCliente: boolean;
+  /** @nullable */
+  dataEvento?: string | null;
+  createdAt: string;
+}
+
+export type ProcessoDetail = Processo & {
+  andamentos?: Andamento[];
+};
+
+export type CreateProcessoBodyArea =
+  (typeof CreateProcessoBodyArea)[keyof typeof CreateProcessoBodyArea];
+
+export const CreateProcessoBodyArea = {
+  civil: "civil",
+  criminal: "criminal",
+  trabalhista: "trabalhista",
+  previdenciario: "previdenciario",
+  familia: "familia",
+  empresarial: "empresarial",
+  outro: "outro",
+} as const;
+
+export type CreateProcessoBodyStatus =
+  (typeof CreateProcessoBodyStatus)[keyof typeof CreateProcessoBodyStatus];
+
+export const CreateProcessoBodyStatus = {
+  em_andamento: "em_andamento",
+  aguardando_decisao: "aguardando_decisao",
+  recurso: "recurso",
+  encerrado: "encerrado",
+} as const;
+
+export interface CreateProcessoBody {
+  numero?: string;
+  /** @minLength 1 */
+  titulo: string;
+  /** @minLength 1 */
+  clienteNome: string;
+  /** @minLength 1 */
+  clienteCpf: string;
+  clienteTelefone?: string;
+  area?: CreateProcessoBodyArea;
+  status?: CreateProcessoBodyStatus;
+  descricao?: string;
+  advogadoId: number;
+}
+
+export type UpdateProcessoBodyArea =
+  (typeof UpdateProcessoBodyArea)[keyof typeof UpdateProcessoBodyArea];
+
+export const UpdateProcessoBodyArea = {
+  civil: "civil",
+  criminal: "criminal",
+  trabalhista: "trabalhista",
+  previdenciario: "previdenciario",
+  familia: "familia",
+  empresarial: "empresarial",
+  outro: "outro",
+} as const;
+
+export type UpdateProcessoBodyStatus =
+  (typeof UpdateProcessoBodyStatus)[keyof typeof UpdateProcessoBodyStatus];
+
+export const UpdateProcessoBodyStatus = {
+  em_andamento: "em_andamento",
+  aguardando_decisao: "aguardando_decisao",
+  recurso: "recurso",
+  encerrado: "encerrado",
+} as const;
+
+export interface UpdateProcessoBody {
+  /** @minLength 1 */
+  titulo?: string;
+  /** @minLength 1 */
+  clienteNome?: string;
+  /** @minLength 1 */
+  clienteCpf?: string;
+  /** @nullable */
+  clienteTelefone?: string | null;
+  area?: UpdateProcessoBodyArea;
+  status?: UpdateProcessoBodyStatus;
+  /** @nullable */
+  descricao?: string | null;
+  advogadoId?: number;
+}
+
+export type CreateAndamentoBodyTipo =
+  (typeof CreateAndamentoBodyTipo)[keyof typeof CreateAndamentoBodyTipo];
+
+export const CreateAndamentoBodyTipo = {
+  andamento: "andamento",
+  parecer: "parecer",
+  audiencia: "audiencia",
+  prazo: "prazo",
+  recurso: "recurso",
+  encerramento: "encerramento",
+  outro: "outro",
+} as const;
+
+export interface CreateAndamentoBody {
+  tipo?: CreateAndamentoBodyTipo;
+  /** @minLength 1 */
+  conteudo: string;
+  visivelCliente?: boolean;
+  dataEvento?: string;
+}
+
+export type UpdateAndamentoBodyTipo =
+  (typeof UpdateAndamentoBodyTipo)[keyof typeof UpdateAndamentoBodyTipo];
+
+export const UpdateAndamentoBodyTipo = {
+  andamento: "andamento",
+  parecer: "parecer",
+  audiencia: "audiencia",
+  prazo: "prazo",
+  recurso: "recurso",
+  encerramento: "encerramento",
+  outro: "outro",
+} as const;
+
+export interface UpdateAndamentoBody {
+  tipo?: UpdateAndamentoBodyTipo;
+  /** @minLength 1 */
+  conteudo?: string;
+  visivelCliente?: boolean;
+  /** @nullable */
+  dataEvento?: string | null;
+}
+
+export interface ConsultarProcessoBody {
+  cpf?: string;
+  numero?: string;
+  pergunta?: string;
+}
+
+export type ConsultarProcessoResponseProcesso = {
+  numero?: string;
+  titulo?: string;
+  status?: string;
+  area?: string;
+  clienteNome?: string;
+};
+
+export interface ConsultarProcessoResponse {
+  resposta: string;
+  processo?: ConsultarProcessoResponseProcesso;
+}
+
 export type UploadDocumentBody = {
   /** PDF or DOCX file */
   file: Blob;
@@ -217,4 +432,12 @@ export type SearchDocumentsParams = {
   q: string;
   page?: number;
   limit?: number;
+};
+
+export type ListProcessosParams = {
+  page?: number;
+  limit?: number;
+  status?: string;
+  area?: string;
+  search?: string;
 };

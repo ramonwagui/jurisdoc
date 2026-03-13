@@ -6,6 +6,7 @@ import usersRouter from "./users";
 import categoriesRouter from "./categories";
 import documentsRouter from "./documents";
 import chatRouter from "./chat";
+import processosRouter from "./processos";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(usersRouter);
 router.use(categoriesRouter);
 router.use(documentsRouter);
 router.use(chatRouter);
+router.use(processosRouter);
 
 export default router;

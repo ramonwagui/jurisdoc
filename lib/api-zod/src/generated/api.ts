@@ -339,3 +339,318 @@ export const ChatWithDocumentBody = zod.object({
     )
     .optional(),
 });
+
+/**
+ * @summary List legal cases with pagination and filters
+ */
+export const listProcessosQueryPageDefault = 1;
+export const listProcessosQueryLimitDefault = 20;
+
+export const ListProcessosQueryParams = zod.object({
+  page: zod.coerce.number().default(listProcessosQueryPageDefault),
+  limit: zod.coerce.number().default(listProcessosQueryLimitDefault),
+  status: zod.coerce.string().optional(),
+  area: zod.coerce.string().optional(),
+  search: zod.coerce.string().optional(),
+});
+
+export const ListProcessosResponse = zod.object({
+  processos: zod.array(
+    zod.object({
+      id: zod.number(),
+      numero: zod.string(),
+      titulo: zod.string(),
+      clienteNome: zod.string(),
+      clienteCpf: zod.string(),
+      clienteTelefone: zod.string().nullish(),
+      area: zod.enum([
+        "civil",
+        "criminal",
+        "trabalhista",
+        "previdenciario",
+        "familia",
+        "empresarial",
+        "outro",
+      ]),
+      status: zod.enum([
+        "em_andamento",
+        "aguardando_decisao",
+        "recurso",
+        "encerrado",
+      ]),
+      descricao: zod.string().nullish(),
+      advogadoId: zod.number(),
+      advogadoNome: zod.string().optional(),
+      createdAt: zod.date(),
+      updatedAt: zod.date(),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  totalPages: zod.number(),
+});
+
+/**
+ * @summary Create a new legal case
+ */
+
+export const createProcessoBodyAreaDefault = `civil`;
+export const createProcessoBodyStatusDefault = `em_andamento`;
+
+export const CreateProcessoBody = zod.object({
+  numero: zod.string().optional(),
+  titulo: zod.string().min(1),
+  clienteNome: zod.string().min(1),
+  clienteCpf: zod.string().min(1),
+  clienteTelefone: zod.string().optional(),
+  area: zod
+    .enum([
+      "civil",
+      "criminal",
+      "trabalhista",
+      "previdenciario",
+      "familia",
+      "empresarial",
+      "outro",
+    ])
+    .default(createProcessoBodyAreaDefault),
+  status: zod
+    .enum(["em_andamento", "aguardando_decisao", "recurso", "encerrado"])
+    .default(createProcessoBodyStatusDefault),
+  descricao: zod.string().optional(),
+  advogadoId: zod.number(),
+});
+
+/**
+ * @summary AI-powered public case consultation by CPF or case number
+ */
+export const ConsultarProcessoBody = zod.object({
+  cpf: zod.string().optional(),
+  numero: zod.string().optional(),
+  pergunta: zod.string().optional(),
+});
+
+export const ConsultarProcessoResponse = zod.object({
+  resposta: zod.string(),
+  processo: zod
+    .object({
+      numero: zod.string().optional(),
+      titulo: zod.string().optional(),
+      status: zod.string().optional(),
+      area: zod.string().optional(),
+      clienteNome: zod.string().optional(),
+    })
+    .optional(),
+});
+
+/**
+ * @summary Get case details with timeline
+ */
+export const GetProcessoParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetProcessoResponse = zod
+  .object({
+    id: zod.number(),
+    numero: zod.string(),
+    titulo: zod.string(),
+    clienteNome: zod.string(),
+    clienteCpf: zod.string(),
+    clienteTelefone: zod.string().nullish(),
+    area: zod.enum([
+      "civil",
+      "criminal",
+      "trabalhista",
+      "previdenciario",
+      "familia",
+      "empresarial",
+      "outro",
+    ]),
+    status: zod.enum([
+      "em_andamento",
+      "aguardando_decisao",
+      "recurso",
+      "encerrado",
+    ]),
+    descricao: zod.string().nullish(),
+    advogadoId: zod.number(),
+    advogadoNome: zod.string().optional(),
+    createdAt: zod.date(),
+    updatedAt: zod.date(),
+  })
+  .and(
+    zod.object({
+      andamentos: zod
+        .array(
+          zod.object({
+            id: zod.number(),
+            processoId: zod.number(),
+            autorId: zod.number(),
+            autorNome: zod.string().optional(),
+            tipo: zod.enum([
+              "andamento",
+              "parecer",
+              "audiencia",
+              "prazo",
+              "recurso",
+              "encerramento",
+              "outro",
+            ]),
+            conteudo: zod.string(),
+            visivelCliente: zod.boolean(),
+            dataEvento: zod.date().nullish(),
+            createdAt: zod.date(),
+          }),
+        )
+        .optional(),
+    }),
+  );
+
+/**
+ * @summary Update a legal case
+ */
+export const UpdateProcessoParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateProcessoBody = zod.object({
+  titulo: zod.string().min(1).optional(),
+  clienteNome: zod.string().min(1).optional(),
+  clienteCpf: zod.string().min(1).optional(),
+  clienteTelefone: zod.string().nullish(),
+  area: zod
+    .enum([
+      "civil",
+      "criminal",
+      "trabalhista",
+      "previdenciario",
+      "familia",
+      "empresarial",
+      "outro",
+    ])
+    .optional(),
+  status: zod
+    .enum(["em_andamento", "aguardando_decisao", "recurso", "encerrado"])
+    .optional(),
+  descricao: zod.string().nullish(),
+  advogadoId: zod.number().optional(),
+});
+
+export const UpdateProcessoResponse = zod.object({
+  id: zod.number(),
+  numero: zod.string(),
+  titulo: zod.string(),
+  clienteNome: zod.string(),
+  clienteCpf: zod.string(),
+  clienteTelefone: zod.string().nullish(),
+  area: zod.enum([
+    "civil",
+    "criminal",
+    "trabalhista",
+    "previdenciario",
+    "familia",
+    "empresarial",
+    "outro",
+  ]),
+  status: zod.enum([
+    "em_andamento",
+    "aguardando_decisao",
+    "recurso",
+    "encerrado",
+  ]),
+  descricao: zod.string().nullish(),
+  advogadoId: zod.number(),
+  advogadoNome: zod.string().optional(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
+});
+
+/**
+ * @summary Delete a legal case (admin only)
+ */
+export const DeleteProcessoParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Add a timeline entry to a case
+ */
+export const CreateAndamentoParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const createAndamentoBodyTipoDefault = `andamento`;
+export const createAndamentoBodyVisivelClienteDefault = true;
+
+export const CreateAndamentoBody = zod.object({
+  tipo: zod
+    .enum([
+      "andamento",
+      "parecer",
+      "audiencia",
+      "prazo",
+      "recurso",
+      "encerramento",
+      "outro",
+    ])
+    .default(createAndamentoBodyTipoDefault),
+  conteudo: zod.string().min(1),
+  visivelCliente: zod
+    .boolean()
+    .default(createAndamentoBodyVisivelClienteDefault),
+  dataEvento: zod.string().optional(),
+});
+
+/**
+ * @summary Update a timeline entry
+ */
+export const UpdateAndamentoParams = zod.object({
+  id: zod.coerce.number(),
+  andId: zod.coerce.number(),
+});
+
+export const UpdateAndamentoBody = zod.object({
+  tipo: zod
+    .enum([
+      "andamento",
+      "parecer",
+      "audiencia",
+      "prazo",
+      "recurso",
+      "encerramento",
+      "outro",
+    ])
+    .optional(),
+  conteudo: zod.string().min(1).optional(),
+  visivelCliente: zod.boolean().optional(),
+  dataEvento: zod.string().nullish(),
+});
+
+export const UpdateAndamentoResponse = zod.object({
+  id: zod.number(),
+  processoId: zod.number(),
+  autorId: zod.number(),
+  autorNome: zod.string().optional(),
+  tipo: zod.enum([
+    "andamento",
+    "parecer",
+    "audiencia",
+    "prazo",
+    "recurso",
+    "encerramento",
+    "outro",
+  ]),
+  conteudo: zod.string(),
+  visivelCliente: zod.boolean(),
+  dataEvento: zod.date().nullish(),
+  createdAt: zod.date(),
+});
+
+/**
+ * @summary Delete a timeline entry
+ */
+export const DeleteAndamentoParams = zod.object({
+  id: zod.coerce.number(),
+  andId: zod.coerce.number(),
+});

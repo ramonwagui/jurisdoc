@@ -51,6 +51,8 @@ artifacts-monorepo/
 - `app_users` — Core user table: `id`, `name`, `email` (unique), `password_hash`, `role` enum (`admin`|`advogado`), `active`, `created_at`
 - `categories` — Document categories: `id` (serial), `name` (unique varchar), `created_at`
 - `documents` — Uploaded documents with title, fileName, storagePath, mimeType, extractedText, `category_id` (optional FK to categories, ON DELETE SET NULL), GIN full-text search index using Portuguese config
+- `processos` — Legal cases: `id` (serial), `numero` (unique case number), `titulo`, `cliente_nome`, `cliente_cpf`, `cliente_telefone`, `area` enum (civil/criminal/trabalhista/previdenciario/familia/empresarial/outro), `status` enum (em_andamento/aguardando_decisao/recurso/encerrado), `descricao`, `advogado_id` (FK to app_users), timestamps. Indexes on `cliente_cpf` and `numero`.
+- `processo_andamentos` — Case timeline entries: `id` (serial), `processo_id` (FK to processos, CASCADE), `autor_id` (FK to app_users), `tipo` enum (andamento/parecer/audiencia/prazo/recurso/encerramento/outro), `conteudo`, `visivel_cliente` (boolean), `data_evento`, `created_at`
 
 First admin is created via the Setup page on first visit (shows when no password-based user exists).
 
@@ -98,6 +100,15 @@ First admin is created via the Setup page on first visit (shows when no password
 - `GET /api/documents/:id` — Get document detail
 - `DELETE /api/documents/:id` — Delete document (owner or admin)
 - `POST /api/documents/:id/chat` — SSE stream AI chat with document
+- `GET /api/processos` — List legal cases (paginated, filtered by status/area/search)
+- `POST /api/processos` — Create legal case
+- `GET /api/processos/:id` — Get case detail with andamentos timeline
+- `PATCH /api/processos/:id` — Update case
+- `DELETE /api/processos/:id` — Delete case (admin only)
+- `POST /api/processos/:id/andamentos` — Add timeline entry to case
+- `PATCH /api/processos/:id/andamentos/:andId` — Update timeline entry
+- `DELETE /api/processos/:id/andamentos/:andId` — Delete timeline entry
+- `POST /api/processos/consultar` — **PUBLIC** AI-powered case consultation by CPF or case number (auth exempt)
 
 ## Frontend Pages
 

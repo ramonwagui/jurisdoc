@@ -22,6 +22,10 @@ tags:
     description: Document management operations
   - name: chat
     description: AI chat operations
+  - name: processos
+    description: Legal case management operations
+  - name: andamentos
+    description: Case timeline / updates operations
 paths:
   /healthz:
     get:
@@ -593,6 +597,267 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorEnvelope"
+  /processos:
+    get:
+      operationId: listProcessos
+      tags: [processos]
+      summary: List legal cases with pagination and filters
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: area
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated list of cases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProcessoListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+    post:
+      operationId: createProcesso
+      tags: [processos]
+      summary: Create a new legal case
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProcessoBody"
+      responses:
+        "201":
+          description: Case created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Processo"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /processos/consultar:
+    post:
+      operationId: consultarProcesso
+      tags: [processos]
+      summary: AI-powered public case consultation by CPF or case number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultarProcessoBody"
+      responses:
+        "200":
+          description: AI consultation response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsultarProcessoResponse"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /processos/{id}:
+    get:
+      operationId: getProcesso
+      tags: [processos]
+      summary: Get case details with timeline
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Case details with andamentos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProcessoDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+    patch:
+      operationId: updateProcesso
+      tags: [processos]
+      summary: Update a legal case
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProcessoBody"
+      responses:
+        "200":
+          description: Updated case
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Processo"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+    delete:
+      operationId: deleteProcesso
+      tags: [processos]
+      summary: Delete a legal case (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /processos/{id}/andamentos:
+    post:
+      operationId: createAndamento
+      tags: [andamentos]
+      summary: Add a timeline entry to a case
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAndamentoBody"
+      responses:
+        "201":
+          description: Andamento created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Andamento"
+        "404":
+          description: Case not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /processos/{id}/andamentos/{andId}:
+    patch:
+      operationId: updateAndamento
+      tags: [andamentos]
+      summary: Update a timeline entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: andId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAndamentoBody"
+      responses:
+        "200":
+          description: Updated andamento
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Andamento"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+    delete:
+      operationId: deleteAndamento
+      tags: [andamentos]
+      summary: Delete a timeline entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: andId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
 components:
   parameters:
     SessionCookie:
@@ -867,3 +1132,195 @@ components:
           enum: [user, assistant]
         content:
           type: string
+    Processo:
+      type: object
+      required: [id, numero, titulo, clienteNome, clienteCpf, area, status, advogadoId, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        numero:
+          type: string
+        titulo:
+          type: string
+        clienteNome:
+          type: string
+        clienteCpf:
+          type: string
+        clienteTelefone:
+          type: [string, 'null']
+        area:
+          type: string
+          enum: [civil, criminal, trabalhista, previdenciario, familia, empresarial, outro]
+        status:
+          type: string
+          enum: [em_andamento, aguardando_decisao, recurso, encerrado]
+        descricao:
+          type: [string, 'null']
+        advogadoId:
+          type: integer
+        advogadoNome:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ProcessoListResponse:
+      type: object
+      required: [processos, total, page, totalPages]
+      properties:
+        processos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Processo"
+        total:
+          type: integer
+        page:
+          type: integer
+        totalPages:
+          type: integer
+    ProcessoDetail:
+      allOf:
+        - $ref: "#/components/schemas/Processo"
+        - type: object
+          properties:
+            andamentos:
+              type: array
+              items:
+                $ref: "#/components/schemas/Andamento"
+    CreateProcessoBody:
+      type: object
+      required: [titulo, clienteNome, clienteCpf, advogadoId]
+      properties:
+        numero:
+          type: string
+        titulo:
+          type: string
+          minLength: 1
+        clienteNome:
+          type: string
+          minLength: 1
+        clienteCpf:
+          type: string
+          minLength: 1
+        clienteTelefone:
+          type: string
+        area:
+          type: string
+          enum: [civil, criminal, trabalhista, previdenciario, familia, empresarial, outro]
+          default: civil
+        status:
+          type: string
+          enum: [em_andamento, aguardando_decisao, recurso, encerrado]
+          default: em_andamento
+        descricao:
+          type: string
+        advogadoId:
+          type: integer
+    UpdateProcessoBody:
+      type: object
+      properties:
+        titulo:
+          type: string
+          minLength: 1
+        clienteNome:
+          type: string
+          minLength: 1
+        clienteCpf:
+          type: string
+          minLength: 1
+        clienteTelefone:
+          type: [string, 'null']
+        area:
+          type: string
+          enum: [civil, criminal, trabalhista, previdenciario, familia, empresarial, outro]
+        status:
+          type: string
+          enum: [em_andamento, aguardando_decisao, recurso, encerrado]
+        descricao:
+          type: [string, 'null']
+        advogadoId:
+          type: integer
+    Andamento:
+      type: object
+      required: [id, processoId, autorId, tipo, conteudo, visivelCliente, createdAt]
+      properties:
+        id:
+          type: integer
+        processoId:
+          type: integer
+        autorId:
+          type: integer
+        autorNome:
+          type: string
+        tipo:
+          type: string
+          enum: [andamento, parecer, audiencia, prazo, recurso, encerramento, outro]
+        conteudo:
+          type: string
+        visivelCliente:
+          type: boolean
+        dataEvento:
+          type: [string, 'null']
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    CreateAndamentoBody:
+      type: object
+      required: [conteudo]
+      properties:
+        tipo:
+          type: string
+          enum: [andamento, parecer, audiencia, prazo, recurso, encerramento, outro]
+          default: andamento
+        conteudo:
+          type: string
+          minLength: 1
+        visivelCliente:
+          type: boolean
+          default: true
+        dataEvento:
+          type: string
+    UpdateAndamentoBody:
+      type: object
+      properties:
+        tipo:
+          type: string
+          enum: [andamento, parecer, audiencia, prazo, recurso, encerramento, outro]
+        conteudo:
+          type: string
+          minLength: 1
+        visivelCliente:
+          type: boolean
+        dataEvento:
+          type: [string, 'null']
+    ConsultarProcessoBody:
+      type: object
+      properties:
+        cpf:
+          type: string
+        numero:
+          type: string
+        pergunta:
+          type: string
+    ConsultarProcessoResponse:
+      type: object
+      required: [resposta]
+      properties:
+        resposta:
+          type: string
+        processo:
+          type: object
+          properties:
+            numero:
+              type: string
+            titulo:
+              type: string
+            status:
+              type: string
+            area:
+              type: string
+            clienteNome:
+              type: string

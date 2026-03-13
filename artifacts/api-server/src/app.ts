@@ -35,7 +35,7 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(authMiddleware);
 
-const AUTH_EXEMPT_PATHS = ["/api/healthz", "/api/auth"];
+const AUTH_EXEMPT_PATHS = ["/api/healthz", "/api/auth", "/api/processos/consultar"];
 const STORAGE_EXEMPT = "/api/storage/public-objects";
 
 function activeUserGuard(req: Request, res: Response, next: NextFunction) {
