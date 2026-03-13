@@ -11,7 +11,7 @@ export interface Document {
   uploadedBy: number;
   title: string;
   fileName: string;
-  storagePath: string;
+  storagePath?: string;
   mimeType: string;
   hasExtractedText?: boolean;
   createdAt: Date;

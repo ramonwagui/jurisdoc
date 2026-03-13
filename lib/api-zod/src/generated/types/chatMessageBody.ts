@@ -8,6 +8,7 @@
 import type { ChatHistoryMessage } from "./chatHistoryMessage";
 
 export interface ChatMessageBody {
+  documentId: number;
   /** @minLength 1 */
   message: string;
   history?: ChatHistoryMessage[];

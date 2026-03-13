@@ -12,7 +12,7 @@ import AdminPanel from "@/pages/admin";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ component: Component }: { component: any }) {
+function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {

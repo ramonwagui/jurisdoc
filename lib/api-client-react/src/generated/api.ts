@@ -1677,16 +1677,15 @@ export function useSearchDocuments<
 /**
  * @summary Chat with AI about a specific document (SSE stream)
  */
-export const getChatWithDocumentUrl = (id: number) => {
-  return `/api/documents/${id}/chat`;
+export const getChatWithDocumentUrl = () => {
+  return `/api/chat`;
 };
 
 export const chatWithDocument = async (
-  id: number,
   chatMessageBody: ChatMessageBody,
   options?: RequestInit,
 ): Promise<unknown> => {
-  return customFetch<unknown>(getChatWithDocumentUrl(id), {
+  return customFetch<unknown>(getChatWithDocumentUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...options?.headers },
@@ -1701,14 +1700,14 @@ export const getChatWithDocumentMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof chatWithDocument>>,
     TError,
-    { id: number; data: BodyType<ChatMessageBody> },
+    { data: BodyType<ChatMessageBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof chatWithDocument>>,
   TError,
-  { id: number; data: BodyType<ChatMessageBody> },
+  { data: BodyType<ChatMessageBody> },
   TContext
 > => {
   const mutationKey = ["chatWithDocument"];
@@ -1722,11 +1721,11 @@ export const getChatWithDocumentMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof chatWithDocument>>,
-    { id: number; data: BodyType<ChatMessageBody> }
+    { data: BodyType<ChatMessageBody> }
   > = (props) => {
-    const { id, data } = props ?? {};
+    const { data } = props ?? {};
 
-    return chatWithDocument(id, data, requestOptions);
+    return chatWithDocument(data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -1748,14 +1747,14 @@ export const useChatWithDocument = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof chatWithDocument>>,
     TError,
-    { id: number; data: BodyType<ChatMessageBody> },
+    { data: BodyType<ChatMessageBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof chatWithDocument>>,
   TError,
-  { id: number; data: BodyType<ChatMessageBody> },
+  { data: BodyType<ChatMessageBody> },
   TContext
 > => {
   return useMutation(getChatWithDocumentMutationOptions(options));

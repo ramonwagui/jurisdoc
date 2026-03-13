@@ -32,10 +32,11 @@ export function useChatStream(documentId: number) {
     abortControllerRef.current = new AbortController();
 
     try {
-      const res = await fetch(`/api/documents/${documentId}/chat`, {
+      const res = await fetch(`/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          documentId,
           message: content,
           history: currentHistory
         }),

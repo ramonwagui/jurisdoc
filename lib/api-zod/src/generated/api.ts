@@ -216,7 +216,7 @@ export const ListDocumentsResponse = zod.object({
       uploadedBy: zod.number(),
       title: zod.string(),
       fileName: zod.string(),
-      storagePath: zod.string(),
+      storagePath: zod.string().optional(),
       mimeType: zod.string(),
       hasExtractedText: zod.boolean().optional(),
       createdAt: zod.date(),
@@ -240,7 +240,7 @@ export const GetDocumentResponse = zod.object({
   uploadedBy: zod.number(),
   title: zod.string(),
   fileName: zod.string(),
-  storagePath: zod.string(),
+  storagePath: zod.string().optional(),
   mimeType: zod.string(),
   hasExtractedText: zod.boolean().optional(),
   createdAt: zod.date(),
@@ -288,11 +288,9 @@ export const SearchDocumentsResponse = zod.object({
 /**
  * @summary Chat with AI about a specific document (SSE stream)
  */
-export const ChatWithDocumentParams = zod.object({
-  id: zod.coerce.number(),
-});
 
 export const ChatWithDocumentBody = zod.object({
+  documentId: zod.number(),
   message: zod.string().min(1),
   history: zod
     .array(

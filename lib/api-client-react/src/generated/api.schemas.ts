@@ -120,7 +120,7 @@ export interface Document {
   uploadedBy: number;
   title: string;
   fileName: string;
-  storagePath: string;
+  storagePath?: string;
   mimeType: string;
   hasExtractedText?: boolean;
   createdAt: string;
@@ -166,6 +166,7 @@ export interface ChatHistoryMessage {
 }
 
 export interface ChatMessageBody {
+  documentId: number;
   /** @minLength 1 */
   message: string;
   history?: ChatHistoryMessage[];

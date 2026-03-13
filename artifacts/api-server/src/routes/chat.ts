@@ -3,21 +3,14 @@ import { eq } from "drizzle-orm";
 import { db, documentsTable } from "@workspace/db";
 import { ai } from "@workspace/integrations-gemini-ai";
 import {
-  ChatWithDocumentParams,
   ChatWithDocumentBody,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
-router.post("/documents/:id/chat", async (req, res) => {
+router.post("/chat", async (req, res) => {
   if (!req.isAuthenticated() || !req.appUser) {
     res.status(401).json({ error: "Não autenticado" });
-    return;
-  }
-
-  const params = ChatWithDocumentParams.safeParse({ id: Number(req.params.id) });
-  if (!params.success) {
-    res.status(400).json({ error: "ID inválido" });
     return;
   }
 
@@ -30,7 +23,7 @@ router.post("/documents/:id/chat", async (req, res) => {
   const [doc] = await db
     .select()
     .from(documentsTable)
-    .where(eq(documentsTable.id, params.data.id))
+    .where(eq(documentsTable.id, body.data.documentId))
     .limit(1);
 
   if (!doc) {

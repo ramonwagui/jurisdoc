@@ -471,17 +471,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SearchResultsResponse"
-  /documents/{id}/chat:
+  /chat:
     post:
       operationId: chatWithDocument
       tags: [chat]
       summary: Chat with AI about a specific document (SSE stream)
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
       requestBody:
         required: true
         content:
@@ -656,7 +650,7 @@ components:
           type: boolean
     Document:
       type: object
-      required: [id, uploadedBy, title, fileName, storagePath, mimeType, createdAt]
+      required: [id, uploadedBy, title, fileName, mimeType, createdAt]
       properties:
         id:
           type: integer
@@ -728,8 +722,10 @@ components:
           type: string
     ChatMessageBody:
       type: object
-      required: [message]
+      required: [documentId, message]
       properties:
+        documentId:
+          type: integer
         message:
           type: string
           minLength: 1
