@@ -24,8 +24,13 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 
  * Then uploads the file directly to the returned presigned URL.
  */
 router.post("/storage/uploads/request-url", async (req: Request, res: Response) => {
-  if (!req.isAuthenticated()) {
+  if (!req.isAuthenticated() || !req.appUser) {
     res.status(401).json({ error: "Não autenticado" });
+    return;
+  }
+
+  if (!req.appUser.active) {
+    res.status(403).json({ error: "Conta desativada" });
     return;
   }
 
