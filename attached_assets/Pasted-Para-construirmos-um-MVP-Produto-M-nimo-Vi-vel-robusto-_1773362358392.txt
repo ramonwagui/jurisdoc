@@ -1,0 +1,47 @@
+Para construirmos um MVP (Produto Mínimo Viável) robusto, escalável e pronto para evoluir para um SaaS completo, precisamos definir a arquitetura e o fluxo de dados.
+
+Aqui está o plano de ataque para tirar esse sistema do papel:
+
+1. Sugestão de Stack Tecnológico (Foco em Agilidade e IA)
+Frontend: Next.js (React) com Tailwind CSS. Excelente para criar interfaces rápidas e suportar a complexidade do upload múltiplo e do chat da IA.
+
+Backend: Python com FastAPI. Python é a linguagem nativa para integrações de IA e processamento de documentos (extração de texto de PDFs/Word).
+
+Banco de Dados: PostgreSQL. Ele suporta Full-Text Search nativamente, o que resolve sua necessidade de buscar palavras dentro do documento sem precisarmos configurar um Elasticsearch logo no MVP.
+
+Armazenamento de Arquivos: AWS S3, Google Cloud Storage ou Supabase Storage. (Nunca salve os arquivos direto no banco de dados).
+
+IA: API do Google Gemini (recomendo o modelo Gemini 1.5 Flash pela velocidade ou 1.5 Pro pela capacidade massiva de contexto).
+
+2. Arquitetura das Funcionalidades Core
+A. Sistema de Login e Permissões (RBAC)
+Como fazer: Utilizar autenticação via JWT (JSON Web Tokens).
+
+Níveis de Acesso: Criamos uma tabela de Users com uma coluna role (Admin ou Advogado).
+
+O Admin: Terá um painel (dashboard) exclusivo onde o frontend fará requisições para rotas protegidas no backend (ex: POST /api/users) para criar, editar ou inativar contas de sua equipe.
+
+B. Upload Múltiplo e Processamento do Documento
+Frontend: Utilizar uma biblioteca como o react-dropzone para permitir arrastar e soltar vários arquivos de uma vez.
+
+Backend Flow (O Segredo da Busca):
+
+O backend recebe o arquivo (PDF, DOCX).
+
+Antes de salvar no S3, o backend usa uma biblioteca (como PyMuPDF para PDFs) para extrair todo o texto do documento.
+
+O arquivo original vai para o S3. A URL dele, o título, os metadados e o texto extraído são salvos no PostgreSQL.
+
+C. Motor de Busca (Full-Text Search)
+Como salvamos o texto do documento no banco de dados, quando o usuário digitar "Usucapião" na barra de busca, faremos uma query usando as funcionalidades de busca textual do PostgreSQL.
+
+Ele varre a coluna de texto e retorna os documentos exatos onde a palavra aparece, ranqueando pela relevância.
+
+D. Agente Gemini Integrado
+A Abordagem do MVP: Como os modelos Gemini 1.5 possuem uma janela de contexto gigantesca (até 2 milhões de tokens), não precisamos montar um sistema RAG complexo (com banco de dados vetorial) logo de cara.
+
+O Fluxo: 1. O usuário clica em um documento e abre o chat.
+2. O frontend envia a pergunta do usuário e o ID do documento para o backend.
+3. O backend pega o texto completo do documento no banco de dados.
+4. O backend envia para a API do Gemini um prompt estruturado: "Você é um assistente jurídico. Baseado no seguinte documento: [INSERIR TEXTO DO DOCUMENTO AQUI], responda à pergunta do usuário: [PERGUNTA]".
+5. O Gemini processa e retorna a resposta com base estritamente no documento.
