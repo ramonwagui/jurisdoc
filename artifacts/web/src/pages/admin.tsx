@@ -127,7 +127,7 @@ export default function AdminPanel() {
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
                           user.role === 'admin' 
                             ? 'bg-primary/10 text-primary border-primary/20' 
-                            : 'bg-blue-50 text-blue-700 border-blue-200'
+                            : 'bg-secondary text-secondary-foreground border-border'
                         }`}>
                           {user.role}
                         </span>

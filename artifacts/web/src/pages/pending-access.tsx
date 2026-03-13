@@ -19,8 +19,8 @@ export default function PendingAccess() {
         </div>
 
         <div className="bg-card rounded-2xl p-8 mb-6 border border-border shadow-sm">
-          <div className="w-14 h-14 mx-auto rounded-full bg-amber-50 flex items-center justify-center mb-6">
-            <Clock className="w-7 h-7 text-amber-600" />
+          <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-6">
+            <Clock className="w-7 h-7 text-primary" />
           </div>
 
           <h1 className="text-2xl font-display font-bold text-foreground mb-3">

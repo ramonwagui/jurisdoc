@@ -13,31 +13,31 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <div className="hidden lg:flex flex-1 relative overflow-hidden flex-col justify-between p-12 bg-primary">
+      <div className="hidden lg:flex flex-1 relative overflow-hidden flex-col justify-between p-12 bg-secondary border-r border-border">
         <div className="absolute inset-0 z-0">
           <img 
             src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=1920&q=80&fit=crop" 
             alt="Pillars of Justice" 
-            className="w-full h-full object-cover opacity-10"
+            className="w-full h-full object-cover opacity-[0.06]"
           />
         </div>
         
         <div className="relative z-10">
           <div className="flex items-center gap-4 group">
-            <div className="w-12 h-12 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/20">
+            <div className="w-12 h-12 rounded-xl brand-gradient-bg flex items-center justify-center shadow-sm">
               <Scale className="w-7 h-7 text-white" />
             </div>
-            <span className="font-display font-bold text-3xl tracking-tight text-white">
-              Juris<span className="font-normal italic opacity-80">Doc</span>
+            <span className="font-display font-bold text-3xl tracking-tight text-foreground">
+              Juris<span className="brand-gradient-text font-normal italic">Doc</span>
             </span>
           </div>
         </div>
 
         <div className="relative z-10 max-w-xl">
-          <h1 className="text-5xl font-display font-bold text-white mb-6 leading-tight">
+          <h1 className="text-5xl font-display font-bold text-foreground mb-6 leading-tight">
             Gestão inteligente de documentos jurídicos.
           </h1>
-          <p className="text-lg text-white/70 leading-relaxed">
+          <p className="text-lg text-muted-foreground leading-relaxed">
             Busca avançada, extração de texto automática e análise de documentos com Inteligência Artificial para equipes de alta performance.
           </p>
         </div>
