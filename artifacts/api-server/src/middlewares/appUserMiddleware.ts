@@ -33,20 +33,21 @@ export async function appUserMiddleware(
   }
 
   const allUsers = await db.select().from(appUsersTable).limit(1);
-  const role = allUsers.length === 0 ? ("admin" as const) : ("advogado" as const);
+  if (allUsers.length === 0) {
+    const [newAdmin] = await db
+      .insert(appUsersTable)
+      .values({
+        replitUserId: req.user.id,
+        name:
+          [req.user.firstName, req.user.lastName].filter(Boolean).join(" ") ||
+          "Administrador",
+        email: req.user.email,
+        role: "admin" as const,
+      })
+      .returning();
 
-  const [newUser] = await db
-    .insert(appUsersTable)
-    .values({
-      replitUserId: req.user.id,
-      name:
-        [req.user.firstName, req.user.lastName].filter(Boolean).join(" ") ||
-        "Usuário",
-      email: req.user.email,
-      role,
-    })
-    .returning();
+    req.appUser = newAdmin;
+  }
 
-  req.appUser = newUser;
   next();
 }
