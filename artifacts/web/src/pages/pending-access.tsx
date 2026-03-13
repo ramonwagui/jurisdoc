@@ -1,10 +1,20 @@
+import { useState } from "react";
 import { useAuth } from "@workspace/replit-auth-web";
-import { Scale, Clock, LogOut } from "lucide-react";
+import { Scale, Clock, LogOut, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui-components";
 import { motion } from "framer-motion";
 
 export default function PendingAccess() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const [copied, setCopied] = useState(false);
+
+  const copyId = () => {
+    if (!user?.id) return;
+    navigator.clipboard.writeText(user.id).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
@@ -29,8 +39,35 @@ export default function PendingAccess() {
           <p className="text-muted-foreground leading-relaxed mb-6">
             Sua conta foi autenticada com sucesso, mas ainda não foi aprovada por um administrador do sistema.
           </p>
+
+          {user?.id && (
+            <div className="mb-6 text-left">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                Seu Replit User ID
+              </p>
+              <div className="flex items-center gap-2 bg-secondary rounded-lg px-4 py-3 border border-border">
+                <code className="flex-1 text-sm text-foreground font-mono truncate select-all">
+                  {user.id}
+                </code>
+                <button
+                  onClick={copyId}
+                  className="shrink-0 p-1 rounded hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
+                  title="Copiar ID"
+                >
+                  {copied
+                    ? <Check className="w-4 h-4 text-primary" />
+                    : <Copy className="w-4 h-4" />
+                  }
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Envie este ID para o administrador do escritório para ser cadastrado.
+              </p>
+            </div>
+          )}
+
           <p className="text-sm text-muted-foreground/80 leading-relaxed">
-            Solicite ao administrador do escritório que adicione sua conta no painel de Administração do JurisDoc.
+            O administrador deve inserir esse ID no painel de Administração do JurisDoc.
           </p>
         </div>
 
