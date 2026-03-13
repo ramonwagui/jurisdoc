@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout";
-import { useListUsers, useUpdateUser } from "@workspace/api-client-react";
+import { useListUsers, useUpdateUser, useListCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from "@workspace/api-client-react";
 import type { AppUser } from "@workspace/api-client-react";
 import { Card, Button, Input } from "@/components/ui-components";
-import { ShieldCheck, UserPlus, Search, Pencil, CheckCircle2, XCircle, Power, Eye, EyeOff } from "lucide-react";
+import { ShieldCheck, UserPlus, Search, Pencil, CheckCircle2, XCircle, Power, Eye, EyeOff, Tag, Plus, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatDate } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -172,6 +172,8 @@ export default function AdminPanel() {
             </table>
           </div>
         </Card>
+
+        <CategoriesSection />
       </div>
 
       <UserDialog
@@ -180,6 +182,144 @@ export default function AdminPanel() {
         user={editingUser}
       />
     </Layout>
+  );
+}
+
+function CategoriesSection() {
+  const { data: categories, isLoading } = useListCategories();
+  const createMutation = useCreateCategory();
+  const updateMutation = useUpdateCategory();
+  const deleteMutation = useDeleteCategory();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingName, setEditingName] = useState("");
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+
+    try {
+      await createMutation.mutateAsync({ data: { name: newCategoryName.trim() } });
+      setNewCategoryName("");
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      toast({ title: "Categoria criada com sucesso" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      toast({ title: "Erro ao criar categoria", description: message, variant: "destructive" });
+    }
+  };
+
+  const handleStartEdit = (id: number, name: string) => {
+    setEditingId(id);
+    setEditingName(name);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId || !editingName.trim()) return;
+
+    try {
+      await updateMutation.mutateAsync({ id: editingId, data: { name: editingName.trim() } });
+      setEditingId(null);
+      setEditingName("");
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      toast({ title: "Categoria renomeada" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      toast({ title: "Erro ao renomear", description: message, variant: "destructive" });
+    }
+  };
+
+  const handleDelete = async (id: number, name: string) => {
+    if (!confirm(`Tem certeza que deseja excluir a categoria "${name}"?`)) return;
+
+    try {
+      await deleteMutation.mutateAsync({ id });
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      toast({ title: "Categoria excluída" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      toast({ title: "Erro ao excluir", description: message, variant: "destructive" });
+    }
+  };
+
+  return (
+    <Card className="p-0 overflow-hidden mt-8">
+      <div className="p-5 border-b border-border">
+        <h2 className="text-lg font-medium text-foreground flex items-center gap-2">
+          <Tag className="w-5 h-5 text-primary" />
+          Categorias
+        </h2>
+      </div>
+
+      <div className="p-5">
+        <form onSubmit={handleCreate} className="flex gap-3 mb-6">
+          <Input
+            value={newCategoryName}
+            onChange={(e) => setNewCategoryName(e.target.value)}
+            placeholder="Nome da nova categoria..."
+            className="flex-1"
+          />
+          <Button type="submit" disabled={!newCategoryName.trim() || createMutation.isPending}>
+            <Plus className="w-4 h-4 mr-1" />
+            Adicionar
+          </Button>
+        </form>
+
+        {isLoading ? (
+          <p className="text-muted-foreground text-sm">Carregando categorias...</p>
+        ) : categories && categories.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {categories.map((cat) => (
+              <div
+                key={cat.id}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-secondary text-secondary-foreground border border-border"
+              >
+                <Tag className="w-3.5 h-3.5 text-primary" />
+                {editingId === cat.id ? (
+                  <input
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value)}
+                    onBlur={handleSaveEdit}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSaveEdit();
+                      if (e.key === "Escape") { setEditingId(null); setEditingName(""); }
+                    }}
+                    autoFocus
+                    className="bg-transparent border-b border-primary outline-none text-sm w-24"
+                  />
+                ) : (
+                  <span
+                    onDoubleClick={() => handleStartEdit(cat.id, cat.name)}
+                    className="cursor-pointer"
+                    title="Duplo clique para renomear"
+                  >
+                    {cat.name}
+                  </span>
+                )}
+                <button
+                  onClick={() => handleStartEdit(cat.id, cat.name)}
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                  title="Renomear categoria"
+                >
+                  <Pencil className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={() => handleDelete(cat.id, cat.name)}
+                  className="text-muted-foreground hover:text-destructive transition-colors"
+                  title="Excluir categoria"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-sm">Nenhuma categoria cadastrada.</p>
+        )}
+      </div>
+    </Card>
   );
 }
 

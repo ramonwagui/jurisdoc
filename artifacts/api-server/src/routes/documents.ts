@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, sql, desc, count } from "drizzle-orm";
-import { db, appUsersTable, documentsTable } from "@workspace/db";
+import { db, appUsersTable, documentsTable, categoriesTable } from "@workspace/db";
 import {
   GetDocumentParams,
   DeleteDocumentParams,
@@ -19,9 +19,15 @@ router.get("/documents", async (req, res) => {
   const parsed = ListDocumentsQueryParams.safeParse(req.query);
   const page = parsed.success ? parsed.data.page ?? 1 : 1;
   const limit = parsed.success ? parsed.data.limit ?? 20 : 20;
+  const categoryId = parsed.success ? parsed.data.categoryId : undefined;
   const offset = (page - 1) * limit;
 
-  const [totalResult] = await db.select({ count: count() }).from(documentsTable);
+  const whereConditions = categoryId !== undefined ? eq(documentsTable.categoryId, categoryId) : undefined;
+
+  const [totalResult] = await db
+    .select({ count: count() })
+    .from(documentsTable)
+    .where(whereConditions);
   const total = totalResult?.count ?? 0;
 
   const documents = await db
@@ -32,11 +38,15 @@ router.get("/documents", async (req, res) => {
       fileName: documentsTable.fileName,
       mimeType: documentsTable.mimeType,
       hasExtractedText: sql<boolean>`length(${documentsTable.extractedText}) > 0`,
+      categoryId: documentsTable.categoryId,
+      categoryName: categoriesTable.name,
       createdAt: documentsTable.createdAt,
       uploaderName: appUsersTable.name,
     })
     .from(documentsTable)
     .leftJoin(appUsersTable, eq(documentsTable.uploadedBy, appUsersTable.id))
+    .leftJoin(categoriesTable, eq(documentsTable.categoryId, categoriesTable.id))
+    .where(whereConditions)
     .orderBy(desc(documentsTable.createdAt))
     .limit(limit)
     .offset(offset);
@@ -105,11 +115,14 @@ router.get("/documents/search", async (req, res) => {
         fileName: documentsTable.fileName,
         snippet: sql<string>`substring(${documentsTable.extractedText} from greatest(1, position(lower(${q}) in lower(${documentsTable.extractedText})) - 50) for 150)`,
         rank: sql<number>`1`,
+        categoryId: documentsTable.categoryId,
+        categoryName: categoriesTable.name,
         createdAt: documentsTable.createdAt,
         uploaderName: appUsersTable.name,
       })
       .from(documentsTable)
       .leftJoin(appUsersTable, eq(documentsTable.uploadedBy, appUsersTable.id))
+      .leftJoin(categoriesTable, eq(documentsTable.categoryId, categoriesTable.id))
       .where(sql`(${documentsTable.title} || ' ' || ${documentsTable.extractedText}) ILIKE ${ilikePattern}`)
       .orderBy(desc(documentsTable.createdAt))
       .limit(limit)
@@ -122,11 +135,14 @@ router.get("/documents/search", async (req, res) => {
         fileName: documentsTable.fileName,
         snippet: sql<string>`substring(${documentsTable.extractedText} from 1 for 150)`,
         rank: sql<number>`word_similarity(${q}, ${documentsTable.title} || ' ' || ${documentsTable.extractedText})`,
+        categoryId: documentsTable.categoryId,
+        categoryName: categoriesTable.name,
         createdAt: documentsTable.createdAt,
         uploaderName: appUsersTable.name,
       })
       .from(documentsTable)
       .leftJoin(appUsersTable, eq(documentsTable.uploadedBy, appUsersTable.id))
+      .leftJoin(categoriesTable, eq(documentsTable.categoryId, categoriesTable.id))
       .where(sql`word_similarity(${q}, ${documentsTable.title} || ' ' || ${documentsTable.extractedText}) > 0.3`)
       .orderBy(sql`word_similarity(${q}, ${documentsTable.title} || ' ' || ${documentsTable.extractedText}) DESC`)
       .limit(limit)
@@ -139,11 +155,14 @@ router.get("/documents/search", async (req, res) => {
         fileName: documentsTable.fileName,
         snippet: sql<string>`ts_headline('simple', ${documentsTable.extractedText}, ${tsQuery}, 'MaxWords=50, MinWords=20, StartSel=<mark>, StopSel=</mark>')`,
         rank: sql<number>`ts_rank(${documentsTable.searchVector}, ${tsQuery})`,
+        categoryId: documentsTable.categoryId,
+        categoryName: categoriesTable.name,
         createdAt: documentsTable.createdAt,
         uploaderName: appUsersTable.name,
       })
       .from(documentsTable)
       .leftJoin(appUsersTable, eq(documentsTable.uploadedBy, appUsersTable.id))
+      .leftJoin(categoriesTable, eq(documentsTable.categoryId, categoriesTable.id))
       .where(sql`${documentsTable.searchVector} @@ ${tsQuery}`)
       .orderBy(sql`ts_rank(${documentsTable.searchVector}, ${tsQuery}) DESC`)
       .limit(limit)
@@ -180,11 +199,14 @@ router.get("/documents/:id", async (req, res) => {
       storagePath: documentsTable.storagePath,
       mimeType: documentsTable.mimeType,
       hasExtractedText: sql<boolean>`length(${documentsTable.extractedText}) > 0`,
+      categoryId: documentsTable.categoryId,
+      categoryName: categoriesTable.name,
       createdAt: documentsTable.createdAt,
       uploaderName: appUsersTable.name,
     })
     .from(documentsTable)
     .leftJoin(appUsersTable, eq(documentsTable.uploadedBy, appUsersTable.id))
+    .leftJoin(categoriesTable, eq(documentsTable.categoryId, categoriesTable.id))
     .where(eq(documentsTable.id, params.data.id))
     .limit(1);
 

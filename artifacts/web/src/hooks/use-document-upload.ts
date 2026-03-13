@@ -10,7 +10,7 @@ export function useDocumentUpload() {
   
   const queryClient = useQueryClient();
 
-  const uploadFiles = async (files: File[]) => {
+  const uploadFiles = async (files: File[], categoryId?: string) => {
     setIsUploading(true);
     setProgress(0);
     
@@ -24,6 +24,9 @@ export function useDocumentUpload() {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("title", file.name.replace(/\.[^/.]+$/, ""));
+        if (categoryId) {
+          formData.append("categoryId", categoryId);
+        }
 
         const response = await fetch(`${API_BASE}/api/storage/upload-document`, {
           method: "POST",

@@ -1,24 +1,28 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, UploadCloud, FileText, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "./ui-components";
 import { useDocumentUpload } from "@/hooks/use-document-upload";
 import { useToast } from "@/hooks/use-toast";
+import { useListCategories } from "@workspace/api-client-react";
 
 export function UploadModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { uploadFiles, isUploading, progress, statusText } = useDocumentUpload();
   const { toast } = useToast();
+  const { data: categories } = useListCategories();
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
     try {
-      await uploadFiles(acceptedFiles);
+      await uploadFiles(acceptedFiles, selectedCategoryId || undefined);
       toast({
         title: "Sucesso",
         description: "Documentos enviados com sucesso.",
         variant: "default",
       });
+      setSelectedCategoryId("");
       setTimeout(onClose, 2000);
     } catch (e) {
       toast({
@@ -27,7 +31,7 @@ export function UploadModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
         variant: "destructive",
       });
     }
-  }, [uploadFiles, onClose, toast]);
+  }, [uploadFiles, onClose, toast, selectedCategoryId]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
     onDrop,
@@ -62,6 +66,25 @@ export function UploadModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
         </div>
 
         <div className="p-8">
+          {categories && categories.length > 0 && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                Categoria (opcional)
+              </label>
+              <select
+                value={selectedCategoryId}
+                onChange={(e) => setSelectedCategoryId(e.target.value)}
+                disabled={isUploading}
+                className="w-full h-11 rounded-lg border border-border bg-card px-4 text-foreground focus:ring-2 focus:ring-primary outline-none text-sm"
+              >
+                <option value="">Sem categoria</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div 
             {...getRootProps()} 
             className={`

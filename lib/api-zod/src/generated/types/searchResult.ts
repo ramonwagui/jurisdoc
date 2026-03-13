@@ -12,6 +12,8 @@ export interface SearchResult {
   fileName: string;
   snippet: string;
   rank: number;
+  categoryId?: number;
+  categoryName?: string;
   createdAt: Date;
   uploaderName?: string;
 }

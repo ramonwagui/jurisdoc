@@ -123,6 +123,17 @@ export interface UpdateUserBody {
   password?: string;
 }
 
+export interface Category {
+  id: number;
+  name: string;
+  createdAt: string;
+}
+
+export interface CreateCategoryBody {
+  /** @minLength 1 */
+  name: string;
+}
+
 export interface Document {
   id: number;
   uploadedBy: number;
@@ -131,6 +142,8 @@ export interface Document {
   storagePath?: string;
   mimeType: string;
   hasExtractedText?: boolean;
+  categoryId?: number;
+  categoryName?: string;
   createdAt: string;
   uploaderName?: string;
 }
@@ -148,6 +161,8 @@ export interface SearchResult {
   fileName: string;
   snippet: string;
   rank: number;
+  categoryId?: number;
+  categoryName?: string;
   createdAt: string;
   uploaderName?: string;
 }
@@ -185,11 +200,14 @@ export type UploadDocumentBody = {
   file: Blob;
   /** Document title (defaults to filename without extension) */
   title?: string;
+  /** Category ID (optional) */
+  categoryId?: string;
 };
 
 export type ListDocumentsParams = {
   page?: number;
   limit?: number;
+  categoryId?: number;
 };
 
 export type SearchDocumentsParams = {

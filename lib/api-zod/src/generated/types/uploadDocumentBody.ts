@@ -11,4 +11,6 @@ export type UploadDocumentBody = {
   file: Blob;
   /** Document title (defaults to filename without extension) */
   title?: string;
+  /** Category ID (optional) */
+  categoryId?: string;
 };

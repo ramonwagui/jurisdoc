@@ -14,6 +14,8 @@ export interface Document {
   storagePath?: string;
   mimeType: string;
   hasExtractedText?: boolean;
+  categoryId?: number;
+  categoryName?: string;
   createdAt: Date;
   uploaderName?: string;
 }

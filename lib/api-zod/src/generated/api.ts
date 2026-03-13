@@ -107,6 +107,7 @@ export const UploadDocumentBody = zod.object({
     .string()
     .optional()
     .describe("Document title (defaults to filename without extension)"),
+  categoryId: zod.string().optional().describe("Category ID (optional)"),
 });
 
 /**
@@ -187,6 +188,48 @@ export const GetCurrentUserResponse = zod.object({
 });
 
 /**
+ * @summary List all categories
+ */
+export const ListCategoriesResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  createdAt: zod.date(),
+});
+export const ListCategoriesResponse = zod.array(ListCategoriesResponseItem);
+
+/**
+ * @summary Create a new category (admin only)
+ */
+
+export const CreateCategoryBody = zod.object({
+  name: zod.string().min(1),
+});
+
+/**
+ * @summary Rename a category (admin only)
+ */
+export const UpdateCategoryParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateCategoryBody = zod.object({
+  name: zod.string().min(1),
+});
+
+export const UpdateCategoryResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  createdAt: zod.date(),
+});
+
+/**
+ * @summary Delete a category (admin only)
+ */
+export const DeleteCategoryParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
  * @summary List all documents
  */
 export const listDocumentsQueryPageDefault = 1;
@@ -195,6 +238,7 @@ export const listDocumentsQueryLimitDefault = 20;
 export const ListDocumentsQueryParams = zod.object({
   page: zod.coerce.number().default(listDocumentsQueryPageDefault),
   limit: zod.coerce.number().default(listDocumentsQueryLimitDefault),
+  categoryId: zod.coerce.number().optional(),
 });
 
 export const ListDocumentsResponse = zod.object({
@@ -207,6 +251,8 @@ export const ListDocumentsResponse = zod.object({
       storagePath: zod.string().optional(),
       mimeType: zod.string(),
       hasExtractedText: zod.boolean().optional(),
+      categoryId: zod.number().optional(),
+      categoryName: zod.string().optional(),
       createdAt: zod.date(),
       uploaderName: zod.string().optional(),
     }),
@@ -231,6 +277,8 @@ export const GetDocumentResponse = zod.object({
   storagePath: zod.string().optional(),
   mimeType: zod.string(),
   hasExtractedText: zod.boolean().optional(),
+  categoryId: zod.number().optional(),
+  categoryName: zod.string().optional(),
   createdAt: zod.date(),
   uploaderName: zod.string().optional(),
 });
@@ -263,6 +311,8 @@ export const SearchDocumentsResponse = zod.object({
       fileName: zod.string(),
       snippet: zod.string(),
       rank: zod.number(),
+      categoryId: zod.number().optional(),
+      categoryName: zod.string().optional(),
       createdAt: zod.date(),
       uploaderName: zod.string().optional(),
     }),

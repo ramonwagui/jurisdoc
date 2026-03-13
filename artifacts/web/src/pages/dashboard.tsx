@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useListDocuments, useSearchDocuments, getListDocumentsQueryKey, getSearchDocumentsQueryKey } from "@workspace/api-client-react";
+import { useListDocuments, useSearchDocuments, useListCategories, getListDocumentsQueryKey, getSearchDocumentsQueryKey } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout";
 import { UploadModal } from "@/components/upload-modal";
 import { Input, Button, Card } from "@/components/ui-components";
-import { Search, Plus, FileText, Calendar, ChevronRight } from "lucide-react";
+import { Search, Plus, FileText, Calendar, ChevronRight, Tag } from "lucide-react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDate } from "@/lib/utils";
@@ -16,16 +16,20 @@ interface DocumentListItem {
   createdAt: string;
   uploaderName?: string | null;
   snippet?: string | null;
+  categoryId?: number | null;
+  categoryName?: string | null;
 }
 
 export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 500);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined);
+  const { data: categories } = useListCategories();
 
   const isSearching = debouncedSearch.trim().length > 0;
 
-  const listParams = { page: 1, limit: 20 };
+  const listParams = { page: 1, limit: 20, ...(selectedCategoryId ? { categoryId: selectedCategoryId } : {}) };
   const { data: listData, isLoading: listLoading } = useListDocuments(
     listParams,
     { query: { queryKey: getListDocumentsQueryKey(listParams), enabled: !isSearching } }
@@ -46,6 +50,8 @@ export default function Dashboard() {
         createdAt: r.createdAt,
         uploaderName: r.uploaderName,
         snippet: r.snippet,
+        categoryId: r.categoryId,
+        categoryName: r.categoryName,
       }))
     : (listData?.documents || []).map((d) => ({
         id: d.id,
@@ -54,6 +60,8 @@ export default function Dashboard() {
         createdAt: d.createdAt,
         uploaderName: d.uploaderName,
         snippet: null,
+        categoryId: d.categoryId,
+        categoryName: d.categoryName,
       }));
 
   const total = isSearching ? searchData?.total || 0 : listData?.total || 0;
@@ -86,7 +94,7 @@ export default function Dashboard() {
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="relative max-w-3xl mb-10 group"
+          className="relative max-w-3xl mb-6 group"
         >
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -98,6 +106,37 @@ export default function Dashboard() {
             className="pl-12 h-12 text-base rounded-xl"
           />
         </motion.div>
+
+        {categories && categories.length > 0 && !isSearching && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+            className="flex flex-wrap gap-2 mb-10"
+          >
+            <button
+              onClick={() => setSelectedCategoryId(undefined)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                !selectedCategoryId
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-secondary text-muted-foreground border-border hover:border-primary/50"
+              }`}
+            >
+              Todas
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategoryId(selectedCategoryId === cat.id ? undefined : cat.id)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                  selectedCategoryId === cat.id
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-secondary text-muted-foreground border-border hover:border-primary/50"
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </motion.div>
+        )}
 
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -139,6 +178,15 @@ export default function Dashboard() {
                             <p className="text-sm text-muted-foreground truncate">{doc.fileName}</p>
                           </div>
                         </div>
+
+                        {doc.categoryName && (
+                          <div className="mb-3">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                              <Tag className="w-3 h-3" />
+                              {doc.categoryName}
+                            </span>
+                          </div>
+                        )}
                         
                         {doc.snippet && (
                           <div className="mb-4 flex-1">

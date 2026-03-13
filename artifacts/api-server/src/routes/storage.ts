@@ -116,6 +116,26 @@ router.post("/storage/upload-document", upload.single("file"), async (req: Reque
     }
 
     const title = req.body.title || file.originalname.replace(/\.[^/.]+$/, "");
+    const rawCategoryId = req.body.categoryId;
+    let categoryId: number | undefined = undefined;
+    if (rawCategoryId) {
+      const parsed = Number(rawCategoryId);
+      if (isNaN(parsed) || parsed <= 0) {
+        res.status(400).json({ error: "ID de categoria inválido" });
+        return;
+      }
+      const { categoriesTable } = await import("@workspace/db");
+      const [cat] = await db
+        .select({ id: categoriesTable.id })
+        .from(categoriesTable)
+        .where(sql`${categoriesTable.id} = ${parsed}`)
+        .limit(1);
+      if (!cat) {
+        res.status(400).json({ error: "Categoria não encontrada" });
+        return;
+      }
+      categoryId = parsed;
+    }
 
     const [doc] = await db
       .insert(documentsTable)
@@ -125,6 +145,7 @@ router.post("/storage/upload-document", upload.single("file"), async (req: Reque
         fileName: file.originalname,
         storagePath: objectPath,
         mimeType: validatedMimeType,
+        categoryId,
         extractedText,
         searchVector: sql`to_tsvector('portuguese', ${title} || ' ' || ${extractedText}) || to_tsvector('simple', ${title} || ' ' || ${extractedText})`,
       })

@@ -6,8 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type ListDocumentsParams = {
-  page?: number;
-  limit?: number;
-  categoryId?: number;
-};
+export interface Category {
+  id: number;
+  name: string;
+  createdAt: Date;
+}

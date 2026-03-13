@@ -49,7 +49,8 @@ artifacts-monorepo/
 - `sessions` — DB session store (sid, sess JSON with `{appUserId}`, expire)
 - `users` — Kept for legacy Replit Auth compatibility (not used for new auth)
 - `app_users` — Core user table: `id`, `name`, `email` (unique), `password_hash`, `role` enum (`admin`|`advogado`), `active`, `created_at`
-- `documents` — Uploaded documents with title, fileName, storagePath, mimeType, extractedText, GIN full-text search index using Portuguese config
+- `categories` — Document categories: `id` (serial), `name` (unique varchar), `created_at`
+- `documents` — Uploaded documents with title, fileName, storagePath, mimeType, extractedText, `category_id` (optional FK to categories, ON DELETE SET NULL), GIN full-text search index using Portuguese config
 
 First admin is created via the Setup page on first visit (shows when no password-based user exists).
 
@@ -88,7 +89,11 @@ First admin is created via the Setup page on first visit (shows when no password
 - `GET /api/users` — List all users (admin only)
 - `POST /api/users` — Create user (admin only)
 - `PATCH /api/users/:id` — Update user (admin only)
-- `GET /api/documents` — List documents (paginated)
+- `GET /api/categories` — List all categories
+- `POST /api/categories` — Create category (admin only)
+- `PATCH /api/categories/:id` — Rename category (admin only)
+- `DELETE /api/categories/:id` — Delete category (admin only)
+- `GET /api/documents` — List documents (paginated, optional `?categoryId=` filter)
 - `GET /api/documents/search?q=...` — Full-text search (dual portuguese+simple tsquery, ILIKE fallback)
 - `GET /api/documents/:id` — Get document detail
 - `DELETE /api/documents/:id` — Delete document (owner or admin)
@@ -97,9 +102,9 @@ First admin is created via the Setup page on first visit (shows when no password
 ## Frontend Pages
 
 - `/login` — Login page with email/password form; auto-detects first-setup mode
-- `/` — Dashboard (document list + search + upload modal)
+- `/` — Dashboard (document list + search + category filter chips + upload modal with category selection; documents show category badges)
 - `/document/:id` — Document detail with PDF viewer + AI chat panel
-- `/admin` — Admin user management panel (admin role only)
+- `/admin` — Admin panel: user management + categories management (create, rename, delete)
 
 ## Document Upload Flow
 
