@@ -1191,7 +1191,7 @@ components:
                 $ref: "#/components/schemas/Andamento"
     CreateProcessoBody:
       type: object
-      required: [titulo, clienteNome, clienteCpf, advogadoId]
+      required: [titulo, clienteNome, clienteCpf]
       properties:
         numero:
           type: string

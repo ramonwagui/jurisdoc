@@ -418,7 +418,7 @@ export const CreateProcessoBody = zod.object({
     .enum(["em_andamento", "aguardando_decisao", "recurso", "encerrado"])
     .default(createProcessoBodyStatusDefault),
   descricao: zod.string().optional(),
-  advogadoId: zod.number(),
+  advogadoId: zod.number().optional(),
 });
 
 /**

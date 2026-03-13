@@ -20,5 +20,5 @@ export interface CreateProcessoBody {
   area?: CreateProcessoBodyArea;
   status?: CreateProcessoBodyStatus;
   descricao?: string;
-  advogadoId: number;
+  advogadoId?: number;
 }

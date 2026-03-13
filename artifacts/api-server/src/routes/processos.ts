@@ -15,7 +15,7 @@ const CreateProcessoBody = z.object({
   area: z.enum(["civil", "criminal", "trabalhista", "previdenciario", "familia", "empresarial", "outro"]).default("civil"),
   status: z.enum(["em_andamento", "aguardando_decisao", "recurso", "encerrado"]).default("em_andamento"),
   descricao: z.string().optional(),
-  advogadoId: z.number().int(),
+  advogadoId: z.number().int().optional(),
 });
 
 const UpdateProcessoBody = z.object({
@@ -151,7 +151,7 @@ router.post("/processos", async (req, res) => {
     return;
   }
 
-  const advogadoId = req.appUser.role === "admin" ? parsed.data.advogadoId : req.appUser.id;
+  const advogadoId = (req.appUser.role === "admin" && parsed.data.advogadoId) ? parsed.data.advogadoId : req.appUser.id;
   const numero = parsed.data.numero?.trim() || generateNumero();
 
   try {
