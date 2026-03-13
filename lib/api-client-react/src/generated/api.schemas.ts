@@ -9,37 +9,43 @@ export interface HealthStatus {
   status: string;
 }
 
+export type AuthUserRole = (typeof AuthUserRole)[keyof typeof AuthUserRole];
+
+export const AuthUserRole = {
+  admin: "admin",
+  advogado: "advogado",
+} as const;
+
 export interface AuthUser {
-  id: string;
+  id: number;
+  name: string;
   /** @nullable */
   email: string | null;
-  /** @nullable */
-  firstName: string | null;
-  /** @nullable */
-  lastName: string | null;
-  /** @nullable */
-  profileImageUrl: string | null;
+  role: AuthUserRole;
 }
 
 export interface AuthUserEnvelope {
   user: AuthUser | null;
 }
 
-export interface MobileTokenExchangeRequest {
+export interface LoginBody {
   /** @minLength 1 */
-  code: string;
+  email: string;
   /** @minLength 1 */
-  code_verifier: string;
-  /** @minLength 1 */
-  redirect_uri: string;
-  /** @minLength 1 */
-  state: string;
-  /** @minLength 1 */
-  nonce?: string;
+  password: string;
 }
 
-export interface MobileTokenExchangeSuccess {
-  token: string;
+export interface SetupStatus {
+  needsSetup: boolean;
+}
+
+export interface SetupBody {
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 1 */
+  email: string;
+  /** @minLength 6 */
+  password: string;
 }
 
 export const LogoutSuccessValue = {
@@ -75,7 +81,6 @@ export const AppUserRole = {
 
 export interface AppUser {
   id: number;
-  replitUserId: string;
   name: string;
   /** @nullable */
   email: string | null;
@@ -94,10 +99,11 @@ export const CreateUserBodyRole = {
 
 export interface CreateUserBody {
   /** @minLength 1 */
-  replitUserId: string;
-  /** @minLength 1 */
   name: string;
-  email?: string;
+  /** @minLength 1 */
+  email: string;
+  /** @minLength 6 */
+  password: string;
   role: CreateUserBodyRole;
 }
 
@@ -113,6 +119,8 @@ export interface UpdateUserBody {
   name?: string;
   role?: UpdateUserBodyRole;
   active?: boolean;
+  /** @minLength 6 */
+  password?: string;
 }
 
 export interface Document {
@@ -171,24 +179,6 @@ export interface ChatMessageBody {
   message: string;
   history?: ChatHistoryMessage[];
 }
-
-/**
- * Opaque session token
- */
-export type AuthorizationSessionHeaderParameter = string;
-
-export type BeginBrowserLoginParams = {
-  /**
-   * Relative path to redirect to after login (must start with `/`). Defaults to `/`.
-   */
-  returnTo?: string;
-};
-
-export type HandleBrowserLoginCallbackParams = {
-  code?: string;
-  state?: string;
-  iss?: string;
-};
 
 export type UploadDocumentBody = {
   /** PDF or DOCX file */

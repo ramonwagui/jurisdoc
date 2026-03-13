@@ -11,4 +11,6 @@ export interface UpdateUserBody {
   name?: string;
   role?: UpdateUserBodyRole;
   active?: boolean;
+  /** @minLength 6 */
+  password?: string;
 }

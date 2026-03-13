@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout";
-import { useListUsers, useCreateUser, useUpdateUser } from "@workspace/api-client-react";
+import { useListUsers, useUpdateUser } from "@workspace/api-client-react";
 import type { AppUser } from "@workspace/api-client-react";
 import { Card, Button, Input } from "@/components/ui-components";
-import { ShieldCheck, UserPlus, Search, Pencil, CheckCircle2, XCircle, Power } from "lucide-react";
+import { ShieldCheck, UserPlus, Search, Pencil, CheckCircle2, XCircle, Power, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatDate } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -12,14 +12,21 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 
-const userSchema = z.object({
+const newUserSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  email: z.string().email("Email inválido").optional().or(z.literal("")),
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
   role: z.enum(["admin", "advogado"]),
-  replitUserId: z.string().min(1, "Replit User ID é obrigatório para novos usuários").optional()
 });
 
-type UserFormData = z.infer<typeof userSchema>;
+const editUserSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  role: z.enum(["admin", "advogado"]),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").optional().or(z.literal("")),
+});
+
+type NewUserFormData = z.infer<typeof newUserSchema>;
+type EditUserFormData = z.infer<typeof editUserSchema>;
 
 export default function AdminPanel() {
   const { data: users, isLoading } = useListUsers();
@@ -30,9 +37,9 @@ export default function AdminPanel() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const filteredUsers = users?.filter(u => 
-    u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    u.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users?.filter((u) =>
+    u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.email?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const openNewUserDialog = () => {
@@ -52,9 +59,7 @@ export default function AdminPanel() {
         data: { active: !user.active },
       });
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-      toast({
-        title: user.active ? "Usuário desativado" : "Usuário ativado",
-      });
+      toast({ title: user.active ? "Usuário desativado" : "Usuário ativado" });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro desconhecido";
       toast({ title: "Erro ao alterar status", description: message, variant: "destructive" });
@@ -83,11 +88,11 @@ export default function AdminPanel() {
             <h2 className="text-lg font-medium text-foreground">Usuários do Sistema</h2>
             <div className="relative w-full sm:w-72">
               <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input 
-                placeholder="Buscar usuário..." 
+              <Input
+                placeholder="Buscar usuário..."
                 className="pl-10 h-10 rounded-full"
                 value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
           </div>
@@ -121,15 +126,15 @@ export default function AdminPanel() {
                     <tr key={user.id} className="hover:bg-secondary/50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="font-medium text-foreground">{user.name}</div>
-                        <div className="text-sm text-muted-foreground">{user.email || 'Sem email'}</div>
+                        <div className="text-sm text-muted-foreground">{user.email || "Sem email"}</div>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                          user.role === 'admin' 
-                            ? 'bg-primary/10 text-primary border-primary/20' 
-                            : 'bg-secondary text-secondary-foreground border-border'
+                          user.role === "admin"
+                            ? "bg-primary/10 text-primary border-primary/20"
+                            : "bg-secondary text-secondary-foreground border-border"
                         }`}>
-                          {user.role}
+                          {user.role === "admin" ? "Administrador" : "Advogado"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -150,9 +155,9 @@ export default function AdminPanel() {
                         <Button variant="ghost" size="sm" onClick={() => openEditDialog(user)}>
                           <Pencil className="w-4 h-4 mr-1" /> Editar
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => toggleActive(user)}
                           className={user.active ? "hover:text-destructive" : "hover:text-emerald-600"}
                         >
@@ -169,72 +174,83 @@ export default function AdminPanel() {
         </Card>
       </div>
 
-      <UserDialog 
-        isOpen={isDialogOpen} 
-        onClose={() => setIsDialogOpen(false)} 
-        user={editingUser} 
+      <UserDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        user={editingUser}
       />
     </Layout>
   );
 }
 
-function UserDialog({ isOpen, onClose, user }: { isOpen: boolean, onClose: () => void, user: AppUser | null }) {
+function UserDialog({ isOpen, onClose, user }: { isOpen: boolean; onClose: () => void; user: AppUser | null }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const createMutation = useCreateUser();
   const updateMutation = useUpdateUser();
-  
+  const [showPassword, setShowPassword] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+
   const isEditing = !!user;
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<UserFormData>({
-    resolver: zodResolver(userSchema),
-    defaultValues: {
-      name: user?.name || "",
-      email: user?.email || "",
-      role: user?.role || "advogado",
-      replitUserId: user?.replitUserId || ""
-    }
+  const newForm = useForm<NewUserFormData>({
+    resolver: zodResolver(newUserSchema),
+    defaultValues: { name: "", email: "", password: "", role: "advogado" },
+  });
+
+  const editForm = useForm<EditUserFormData>({
+    resolver: zodResolver(editUserSchema),
+    defaultValues: { name: user?.name || "", role: user?.role || "advogado", password: "" },
   });
 
   useEffect(() => {
     if (isOpen) {
-      reset({
-        name: user?.name || "",
-        email: user?.email || "",
-        role: user?.role || "advogado",
-        replitUserId: user?.replitUserId || ""
-      });
-    }
-  }, [isOpen, user, reset]);
-
-  const onSubmit = async (data: UserFormData) => {
-    try {
+      setShowPassword(false);
       if (isEditing) {
-        await updateMutation.mutateAsync({ 
-          id: user.id, 
-          data: { name: data.name, role: data.role }
-        });
-        toast({ title: "Usuário atualizado com sucesso" });
+        editForm.reset({ name: user.name, role: user.role, password: "" });
       } else {
-        if (!data.replitUserId) {
-          toast({ title: "Replit User ID é obrigatório", variant: "destructive" });
-          return;
-        }
-        await createMutation.mutateAsync({ 
-          data: { 
-            name: data.name, 
-            email: data.email || undefined, 
-            role: data.role, 
-            replitUserId: data.replitUserId 
-          } 
-        });
-        toast({ title: "Usuário criado com sucesso" });
+        newForm.reset({ name: "", email: "", password: "", role: "advogado" });
       }
+    }
+  }, [isOpen, user, isEditing]);
+
+  const onSubmitNew = async (data: NewUserFormData) => {
+    setIsCreating(true);
+    try {
+      const res = await fetch("/api/users", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Erro ao criar usuário");
+      }
+      toast({ title: "Usuário criado com sucesso" });
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       onClose();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro desconhecido";
-      toast({ title: "Erro ao salvar", description: message, variant: "destructive" });
+      toast({ title: "Erro ao criar", description: message, variant: "destructive" });
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const onSubmitEdit = async (data: EditUserFormData) => {
+    if (!user) return;
+    try {
+      const updateData: Record<string, unknown> = { name: data.name, role: data.role };
+      if (data.password && data.password.length >= 6) {
+        updateData.password = data.password;
+      }
+      await updateMutation.mutateAsync({ id: user.id, data: updateData });
+      toast({ title: "Usuário atualizado com sucesso" });
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      onClose();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      toast({ title: "Erro ao atualizar", description: message, variant: "destructive" });
     }
   };
 
@@ -243,53 +259,126 @@ function UserDialog({ isOpen, onClose, user }: { isOpen: boolean, onClose: () =>
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-foreground/20 backdrop-blur-sm" onClick={onClose} />
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
         className="relative w-full max-w-md bg-card rounded-2xl p-8 shadow-xl border border-border"
       >
         <h2 className="text-2xl font-display font-semibold text-foreground mb-6">
-          {isEditing ? 'Editar Usuário' : 'Novo Usuário'}
+          {isEditing ? "Editar Usuário" : "Novo Usuário"}
         </h2>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {!isEditing && (
+        {isEditing ? (
+          <form onSubmit={editForm.handleSubmit(onSubmitEdit)} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Replit User ID</label>
-              <Input {...register("replitUserId")} placeholder="Obrigatório para o login SSO" />
-              {errors.replitUserId && <p className="text-destructive text-sm mt-1">{errors.replitUserId.message}</p>}
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Nome Completo</label>
+              <Input {...editForm.register("name")} placeholder="Dr. Fulano de Tal" />
+              {editForm.formState.errors.name && (
+                <p className="text-destructive text-sm mt-1">{editForm.formState.errors.name.message}</p>
+              )}
             </div>
-          )}
 
-          <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">Nome Completo</label>
-            <Input {...register("name")} placeholder="Dr. Fulano" />
-            {errors.name && <p className="text-destructive text-sm mt-1">{errors.name.message}</p>}
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Nível de Acesso</label>
+              <select
+                {...editForm.register("role")}
+                className="w-full h-11 rounded-lg border border-border bg-card px-4 text-foreground focus:ring-2 focus:ring-primary outline-none text-sm"
+              >
+                <option value="advogado">Advogado (Acesso Padrão)</option>
+                <option value="admin">Administrador (Acesso Total)</option>
+              </select>
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">Email (opcional)</label>
-            <Input {...register("email")} placeholder="contato@escritorio.com" type="email" />
-            {errors.email && <p className="text-destructive text-sm mt-1">{errors.email.message}</p>}
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                Nova Senha <span className="text-muted-foreground/60 font-normal">(deixe em branco para manter)</span>
+              </label>
+              <div className="relative">
+                <Input
+                  {...editForm.register("password")}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Mínimo 6 caracteres"
+                  className="pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {editForm.formState.errors.password && (
+                <p className="text-destructive text-sm mt-1">{editForm.formState.errors.password.message}</p>
+              )}
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">Nível de Acesso</label>
-            <select 
-              {...register("role")}
-              className="w-full h-11 rounded-lg border border-border bg-card px-4 text-foreground focus:ring-2 focus:ring-primary outline-none text-sm"
-            >
-              <option value="advogado">Advogado (Acesso Padrão)</option>
-              <option value="admin">Administrador (Acesso Total)</option>
-            </select>
-          </div>
+            <div className="pt-4 flex justify-end gap-3">
+              <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
+              <Button type="submit" isLoading={updateMutation.isPending}>
+                Salvar Alterações
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={newForm.handleSubmit(onSubmitNew)} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Nome Completo</label>
+              <Input {...newForm.register("name")} placeholder="Dr. Fulano de Tal" />
+              {newForm.formState.errors.name && (
+                <p className="text-destructive text-sm mt-1">{newForm.formState.errors.name.message}</p>
+              )}
+            </div>
 
-          <div className="pt-4 flex justify-end gap-3">
-            <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
-            <Button type="submit" isLoading={isSubmitting || createMutation.isPending || updateMutation.isPending}>
-              Salvar Usuário
-            </Button>
-          </div>
-        </form>
+            <div>
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Email</label>
+              <Input {...newForm.register("email")} type="email" placeholder="fulano@escritorio.com.br" />
+              {newForm.formState.errors.email && (
+                <p className="text-destructive text-sm mt-1">{newForm.formState.errors.email.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Senha de Acesso</label>
+              <div className="relative">
+                <Input
+                  {...newForm.register("password")}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Mínimo 6 caracteres"
+                  className="pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {newForm.formState.errors.password && (
+                <p className="text-destructive text-sm mt-1">{newForm.formState.errors.password.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Nível de Acesso</label>
+              <select
+                {...newForm.register("role")}
+                className="w-full h-11 rounded-lg border border-border bg-card px-4 text-foreground focus:ring-2 focus:ring-primary outline-none text-sm"
+              >
+                <option value="advogado">Advogado (Acesso Padrão)</option>
+                <option value="admin">Administrador (Acesso Total)</option>
+              </select>
+            </div>
+
+            <div className="pt-4 flex justify-end gap-3">
+              <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
+              <Button type="submit" isLoading={isCreating}>
+                Criar Usuário
+              </Button>
+            </div>
+          </form>
+        )}
       </motion.div>
     </div>
   );

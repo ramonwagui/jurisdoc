@@ -3,7 +3,6 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import { authMiddleware } from "./middlewares/authMiddleware";
-import { appUserMiddleware } from "./middlewares/appUserMiddleware";
 import router from "./routes";
 
 const app: Express = express();
@@ -35,7 +34,6 @@ app.use(cookieParser());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(authMiddleware);
-app.use(appUserMiddleware);
 
 const AUTH_EXEMPT_PATHS = ["/api/healthz", "/api/auth"];
 const STORAGE_EXEMPT = "/api/storage/public-objects";

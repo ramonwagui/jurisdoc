@@ -3,7 +3,6 @@ import { useAuth } from "@workspace/replit-auth-web";
 
 interface AppUser {
   id: number;
-  replitUserId: string;
   name: string;
   email: string | null;
   role: "admin" | "advogado";
@@ -11,24 +10,16 @@ interface AppUser {
   createdAt: string;
 }
 
-type CurrentUserResult = 
-  | { status: "provisioned"; user: AppUser }
-  | { status: "not_provisioned" }
-  | { status: "unauthenticated" };
-
-async function fetchCurrentUser(): Promise<CurrentUserResult> {
+async function fetchCurrentUser(): Promise<AppUser | null> {
   const res = await fetch("/api/users/me", { credentials: "include" });
-  if (res.status === 401) return { status: "unauthenticated" };
-  if (res.status === 403) return { status: "not_provisioned" };
-  if (!res.ok) throw new Error("Falha ao buscar usuário");
-  const user = await res.json();
-  return { status: "provisioned", user };
+  if (!res.ok) return null;
+  return res.json();
 }
 
 export function useCurrentUser() {
   const { isAuthenticated } = useAuth();
 
-  const { data, isLoading, error } = useQuery<CurrentUserResult>({
+  const { data: user, isLoading, error } = useQuery<AppUser | null>({
     queryKey: ["currentUser"],
     queryFn: fetchCurrentUser,
     enabled: isAuthenticated,
@@ -36,16 +27,10 @@ export function useCurrentUser() {
     retry: false,
   });
 
-  const user = data?.status === "provisioned" ? data.user : null;
-  const isProvisioned = data?.status === "provisioned";
-  const isNotProvisioned = data?.status === "not_provisioned";
-
   return {
-    user,
+    user: user ?? null,
     isLoading,
     isAdmin: user?.role === "admin",
-    isProvisioned,
-    isNotProvisioned,
     error,
   };
 }

@@ -9,7 +9,6 @@ import type { AppUserRole } from "./appUserRole";
 
 export interface AppUser {
   id: number;
-  replitUserId: string;
   name: string;
   /** @nullable */
   email: string | null;

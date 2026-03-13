@@ -6,7 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-/**
- * Opaque session token
- */
-export type AuthorizationSessionHeaderParameter = string;
+export interface SetupStatus {
+  needsSetup: boolean;
+}

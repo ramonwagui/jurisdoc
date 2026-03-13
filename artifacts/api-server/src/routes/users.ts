@@ -1,26 +1,32 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 import { db, appUsersTable } from "@workspace/db";
-import {
-  CreateUserBody,
-  UpdateUserBody,
-  UpdateUserParams,
-} from "@workspace/api-zod";
+import { z } from "zod";
 
 const router: IRouter = Router();
 
+const CreateUserSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+  password: z.string().min(6),
+  role: z.enum(["admin", "advogado"]).default("advogado"),
+});
+
+const UpdateUserSchema = z.object({
+  name: z.string().min(1).optional(),
+  role: z.enum(["admin", "advogado"]).optional(),
+  active: z.boolean().optional(),
+  password: z.string().min(6).optional(),
+});
+
 router.get("/users/me", async (req, res) => {
-  if (!req.isAuthenticated()) {
+  if (!req.isAuthenticated() || !req.appUser) {
     res.status(401).json({ error: "Não autenticado" });
     return;
   }
-
-  if (!req.appUser) {
-    res.status(403).json({ error: "Usuário não provisionado", code: "NOT_PROVISIONED" });
-    return;
-  }
-
-  res.json(req.appUser);
+  const { passwordHash: _pw, ...safeUser } = req.appUser;
+  res.json(safeUser);
 });
 
 router.get("/users", async (req, res) => {
@@ -34,7 +40,15 @@ router.get("/users", async (req, res) => {
     return;
   }
 
-  const users = await db.select().from(appUsersTable);
+  const users = await db.select({
+    id: appUsersTable.id,
+    name: appUsersTable.name,
+    email: appUsersTable.email,
+    role: appUsersTable.role,
+    active: appUsersTable.active,
+    createdAt: appUsersTable.createdAt,
+  }).from(appUsersTable);
+
   res.json(users);
 });
 
@@ -49,23 +63,29 @@ router.post("/users", async (req, res) => {
     return;
   }
 
-  const parsed = CreateUserBody.safeParse(req.body);
+  const parsed = CreateUserSchema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: "Dados inválidos: nome, email, senha e papel são obrigatórios" });
     return;
   }
 
-  const [newUser] = await db
-    .insert(appUsersTable)
-    .values({
-      replitUserId: parsed.data.replitUserId,
-      name: parsed.data.name,
-      email: parsed.data.email,
-      role: parsed.data.role,
-    })
-    .returning();
+  const { name, email, password, role } = parsed.data;
+  const passwordHash = await bcrypt.hash(password, 12);
 
-  res.status(201).json(newUser);
+  let newUser;
+  try {
+    const [created] = await db
+      .insert(appUsersTable)
+      .values({ name, email, passwordHash, role })
+      .returning();
+    newUser = created;
+  } catch {
+    res.status(400).json({ error: "Email já está em uso por outro usuário" });
+    return;
+  }
+
+  const { passwordHash: _pw, ...safeUser } = newUser;
+  res.status(201).json(safeUser);
 });
 
 router.patch("/users/:id", async (req, res) => {
@@ -79,27 +99,30 @@ router.patch("/users/:id", async (req, res) => {
     return;
   }
 
-  const params = UpdateUserParams.safeParse({ id: Number(req.params.id) });
-  if (!params.success) {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
     res.status(400).json({ error: "ID inválido" });
     return;
   }
 
-  const body = UpdateUserBody.safeParse(req.body);
-  if (!body.success) {
-    res.status(400).json({ error: body.error.message });
+  const parsed = UpdateUserSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Dados inválidos" });
     return;
   }
 
   const updateData: Record<string, unknown> = {};
-  if (body.data.name !== undefined) updateData.name = body.data.name;
-  if (body.data.role !== undefined) updateData.role = body.data.role;
-  if (body.data.active !== undefined) updateData.active = body.data.active;
+  if (parsed.data.name !== undefined) updateData.name = parsed.data.name;
+  if (parsed.data.role !== undefined) updateData.role = parsed.data.role;
+  if (parsed.data.active !== undefined) updateData.active = parsed.data.active;
+  if (parsed.data.password !== undefined) {
+    updateData.passwordHash = await bcrypt.hash(parsed.data.password, 12);
+  }
 
   const [updated] = await db
     .update(appUsersTable)
     .set(updateData)
-    .where(eq(appUsersTable.id, params.data.id))
+    .where(eq(appUsersTable.id, id))
     .returning();
 
   if (!updated) {
@@ -107,7 +130,8 @@ router.patch("/users/:id", async (req, res) => {
     return;
   }
 
-  res.json(updated);
+  const { passwordHash: _pw, ...safeUser } = updated;
+  res.json(safeUser);
 });
 
 export default router;

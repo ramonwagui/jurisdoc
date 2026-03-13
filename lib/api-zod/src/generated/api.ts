@@ -18,76 +18,62 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary Get the currently authenticated user
  */
-export const GetCurrentAuthUserHeader = zod.object({
-  Authorization: zod.string().optional().describe("Opaque session token"),
-});
-
 export const GetCurrentAuthUserResponse = zod.object({
   user: zod.union([
     zod.object({
-      id: zod.string(),
-      email: zod.string().email().nullable(),
-      firstName: zod.string().nullable(),
-      lastName: zod.string().nullable(),
-      profileImageUrl: zod.string().nullable(),
+      id: zod.number(),
+      name: zod.string(),
+      email: zod.string().nullable(),
+      role: zod.enum(["admin", "advogado"]),
     }),
     zod.null(),
   ]),
 });
 
 /**
- * @summary Start the browser OIDC login flow
+ * @summary Log in with email and password
  */
-export const BeginBrowserLoginQueryParams = zod.object({
-  returnTo: zod.coerce
-    .string()
-    .optional()
-    .describe(
-      "Relative path to redirect to after login (must start with `\/`). Defaults to `\/`.",
-    ),
+
+export const LoginWithPasswordBody = zod.object({
+  email: zod.string().email().min(1),
+  password: zod.string().min(1),
+});
+
+export const LoginWithPasswordResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  email: zod.string().nullable(),
+  role: zod.enum(["admin", "advogado"]),
+  active: zod.boolean(),
+  createdAt: zod.date(),
 });
 
 /**
- * @summary Complete the browser OIDC login flow
+ * @summary Check if first-time admin setup is needed
  */
-export const HandleBrowserLoginCallbackQueryParams = zod.object({
-  code: zod.coerce.string().optional(),
-  state: zod.coerce.string().optional(),
-  iss: zod.coerce.string().url().optional(),
+export const GetSetupStatusResponse = zod.object({
+  needsSetup: zod.boolean(),
 });
 
 /**
- * @summary Clear the session and begin OIDC logout
- */
-export const LogoutBrowserSessionHeader = zod.object({
-  Authorization: zod.string().optional().describe("Opaque session token"),
-});
-
-/**
- * @summary Exchange a mobile OIDC code for a session token
+ * @summary Create first admin account (only works when no users exist)
  */
 
-export const ExchangeMobileAuthorizationCodeBody = zod.object({
-  code: zod.string().min(1),
-  code_verifier: zod.string().min(1),
-  redirect_uri: zod.string().url().min(1),
-  state: zod.string().min(1),
-  nonce: zod.string().min(1).optional(),
+export const setupFirstAdminBodyPasswordMin = 6;
+
+export const SetupFirstAdminBody = zod.object({
+  name: zod.string().min(1),
+  email: zod.string().email().min(1),
+  password: zod.string().min(setupFirstAdminBodyPasswordMin),
 });
 
-export const ExchangeMobileAuthorizationCodeResponse = zod.object({
-  token: zod.string(),
-});
-
-/**
- * @summary Delete a mobile session token
- */
-export const LogoutMobileSessionHeader = zod.object({
-  Authorization: zod.string().optional().describe("Opaque session token"),
-});
-
-export const LogoutMobileSessionResponse = zod.object({
-  success: zod.boolean(),
+export const SetupFirstAdminResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  email: zod.string().nullable(),
+  role: zod.enum(["admin", "advogado"]),
+  active: zod.boolean(),
+  createdAt: zod.date(),
 });
 
 /**
@@ -142,7 +128,6 @@ export const GetStorageObjectParams = zod.object({
  */
 export const ListUsersResponseItem = zod.object({
   id: zod.number(),
-  replitUserId: zod.string(),
   name: zod.string(),
   email: zod.string().nullable(),
   role: zod.enum(["admin", "advogado"]),
@@ -155,10 +140,12 @@ export const ListUsersResponse = zod.array(ListUsersResponseItem);
  * @summary Create a new user (admin only)
  */
 
+export const createUserBodyPasswordMin = 6;
+
 export const CreateUserBody = zod.object({
-  replitUserId: zod.string().min(1),
   name: zod.string().min(1),
-  email: zod.string().optional(),
+  email: zod.string().email().min(1),
+  password: zod.string().min(createUserBodyPasswordMin),
   role: zod.enum(["admin", "advogado"]),
 });
 
@@ -169,15 +156,17 @@ export const UpdateUserParams = zod.object({
   id: zod.coerce.number(),
 });
 
+export const updateUserBodyPasswordMin = 6;
+
 export const UpdateUserBody = zod.object({
   name: zod.string().optional(),
   role: zod.enum(["admin", "advogado"]).optional(),
   active: zod.boolean().optional(),
+  password: zod.string().min(updateUserBodyPasswordMin).optional(),
 });
 
 export const UpdateUserResponse = zod.object({
   id: zod.number(),
-  replitUserId: zod.string(),
   name: zod.string(),
   email: zod.string().nullable(),
   role: zod.enum(["admin", "advogado"]),
@@ -190,7 +179,6 @@ export const UpdateUserResponse = zod.object({
  */
 export const GetCurrentUserResponse = zod.object({
   id: zod.number(),
-  replitUserId: zod.string(),
   name: zod.string(),
   email: zod.string().nullable(),
   role: zod.enum(["admin", "advogado"]),

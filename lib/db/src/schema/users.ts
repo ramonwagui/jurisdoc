@@ -6,9 +6,10 @@ export const appUserRoleEnum = pgEnum("app_user_role", ["admin", "advogado"]);
 
 export const appUsersTable = pgTable("app_users", {
   id: serial("id").primaryKey(),
-  replitUserId: varchar("replit_user_id").notNull().unique(),
+  replitUserId: varchar("replit_user_id").unique(),
   name: varchar("name").notNull(),
-  email: varchar("email"),
+  email: varchar("email").unique(),
+  passwordHash: varchar("password_hash"),
   role: appUserRoleEnum("role").notNull().default("advogado"),
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),

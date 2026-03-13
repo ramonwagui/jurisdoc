@@ -5,14 +5,12 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { CreateUserBodyRole } from "./createUserBodyRole";
 
-export interface CreateUserBody {
+export interface SetupBody {
   /** @minLength 1 */
   name: string;
   /** @minLength 1 */
   email: string;
   /** @minLength 6 */
   password: string;
-  role: CreateUserBodyRole;
 }

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Full-stack Brazilian law firm SaaS MVP with Replit Auth, document management (PDF/DOCX), full-text search, Gemini AI document chat, and admin panel. All UI text in Brazilian Portuguese (pt-BR). pnpm workspace monorepo using TypeScript.
+Full-stack Brazilian law firm SaaS MVP with email/password database authentication, document management (PDF/DOCX), full-text search, Gemini AI document chat, and admin panel. All UI text in Brazilian Portuguese (pt-BR). pnpm workspace monorepo using TypeScript.
 
 ## Stack
 
@@ -13,7 +13,7 @@ Full-stack Brazilian law firm SaaS MVP with Replit Auth, document management (PD
 - **API framework**: Express 5
 - **Database**: PostgreSQL + Drizzle ORM
 - **Frontend**: React + Vite + TailwindCSS + shadcn/ui
-- **Auth**: Replit OIDC Auth
+- **Auth**: Email + password (bcryptjs), DB session cookies (`sessions` table)
 - **AI**: Gemini 2.5 Flash (via Replit AI Integrations)
 - **Storage**: Replit Object Storage (GCS)
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
@@ -46,18 +46,28 @@ artifacts-monorepo/
 
 ## Database Schema
 
-- `sessions` + `users` — Replit Auth (OIDC sessions, user profiles)
-- `app_users` — App-specific user table with `role` enum (`admin` | `advogado`), references `users.id` via `replit_user_id`
+- `sessions` — DB session store (sid, sess JSON with `{appUserId}`, expire)
+- `users` — Kept for legacy Replit Auth compatibility (not used for new auth)
+- `app_users` — Core user table: `id`, `name`, `email` (unique), `password_hash`, `role` enum (`admin`|`advogado`), `active`, `created_at`
 - `documents` — Uploaded documents with title, fileName, storagePath, mimeType, extractedText, GIN full-text search index using Portuguese config
 
-First user to log in is auto-created as admin.
+First admin is created via the Setup page on first visit (shows when no password-based user exists).
 
-## Security Architecture
+## Auth Architecture
+
+### Login Flow
+- `POST /api/auth/login` → email + bcrypt password check → create session cookie (`sid`)
+- Session stored in `sessions` table as `{ appUserId: number }`
+- `GET /api/auth/user` → loads appUser from session → returns safe user object (no passwordHash)
+
+### First-Time Setup
+- `GET /api/auth/setup-status` → `{ needsSetup: boolean }` (true = no password user exists)
+- `POST /api/auth/setup` → creates first admin (only works when needsSetup=true)
+- Login page auto-detects setup state and shows the correct form
 
 ### Middleware Pipeline
-1. `authMiddleware` — OIDC session validation + token refresh
-2. `appUserMiddleware` — auto-provisions `app_users` row on every authenticated request (first user = admin)
-3. `activeUserGuard` — blocks deactivated users from all protected routes (returns 403)
+1. `authMiddleware` — reads session cookie → loads `appUser` from DB → sets `req.appUser`
+2. `activeUserGuard` — blocks deactivated users from all protected routes (returns 403)
 
 ### Access Control
 - Storage object retrieval verifies document exists in DB before serving files (prevents IDOR)
@@ -67,7 +77,11 @@ First user to log in is auto-created as admin.
 ## API Routes (all prefixed `/api`)
 
 - `GET /api/healthz` — Health check
-- Auth routes — `/api/auth/*` (Replit OIDC)
+- `GET /api/auth/setup-status` — Check if first admin needs to be created
+- `POST /api/auth/setup` — Create first admin (only when no password users exist)
+- `POST /api/auth/login` — Email + password login
+- `GET /api/auth/user` — Get current authenticated user
+- `GET /api/logout` — Clear session and redirect to /login
 - `POST /api/storage/upload-document` — Server-side multipart upload with text extraction
 - `GET /api/storage/objects/*` — Serve stored files (auth + document ownership check)
 - `GET /api/users/me` — Current user profile
@@ -82,7 +96,7 @@ First user to log in is auto-created as admin.
 
 ## Frontend Pages
 
-- `/login` — Login page with Replit Auth
+- `/login` — Login page with email/password form; auto-detects first-setup mode
 - `/` — Dashboard (document list + search + upload modal)
 - `/document/:id` — Document detail with PDF viewer + AI chat panel
 - `/admin` — Admin user management panel (admin role only)

@@ -1,13 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
-import type { AuthUser } from "@workspace/api-client-react";
 
-export type { AuthUser };
+export interface AuthUser {
+  id: number;
+  name: string;
+  email: string | null;
+  role: "admin" | "advogado";
+}
+
+export type { AuthUser as default };
 
 interface AuthState {
   user: AuthUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: () => void;
   logout: () => void;
 }
 
@@ -41,11 +46,6 @@ export function useAuth(): AuthState {
     };
   }, []);
 
-  const login = useCallback(() => {
-    const base = import.meta.env.BASE_URL.replace(/\/+$/, "") || "/";
-    window.location.href = `/api/login?returnTo=${encodeURIComponent(base)}`;
-  }, []);
-
   const logout = useCallback(() => {
     window.location.href = "/api/logout";
   }, []);
@@ -54,7 +54,6 @@ export function useAuth(): AuthState {
     user,
     isLoading,
     isAuthenticated: !!user,
-    login,
     logout,
   };
 }

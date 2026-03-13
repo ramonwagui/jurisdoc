@@ -11,7 +11,7 @@ tags:
   - name: health
     description: Health operations
   - name: Auth
-    description: Browser and mobile authentication endpoints.
+    description: Authentication endpoints.
   - name: Storage
     description: Object storage upload and serving endpoints.
   - name: users
@@ -40,7 +40,6 @@ paths:
       operationId: getCurrentAuthUser
       summary: Get the currently authenticated user
       parameters:
-        - $ref: '#/components/parameters/AuthorizationSessionHeader'
         - $ref: '#/components/parameters/SessionCookie'
       responses:
         '200':
@@ -49,107 +48,88 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthUserEnvelope'
-  /login:
-    get:
-      tags: [Auth]
-      operationId: beginBrowserLogin
-      summary: Start the browser OIDC login flow
-      parameters:
-        - name: returnTo
-          in: query
-          required: false
-          description: Relative path to redirect to after login (must start with `/`). Defaults to `/`.
-          schema:
-            type: string
-      responses:
-        '302':
-          description: Redirect to the OIDC authorization endpoint.
-  /callback:
-    get:
-      tags: [Auth]
-      operationId: handleBrowserLoginCallback
-      summary: Complete the browser OIDC login flow
-      parameters:
-        - name: code
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: state
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: iss
-          in: query
-          required: false
-          schema:
-            type: string
-            format: uri
-      responses:
-        '302':
-          description: Redirect to the `returnTo` path on success (defaults to `/`) or `/api/login` on failure.
-  /logout:
-    get:
-      tags: [Auth]
-      operationId: logoutBrowserSession
-      summary: Clear the session and begin OIDC logout
-      parameters:
-        - $ref: '#/components/parameters/AuthorizationSessionHeader'
-        - $ref: '#/components/parameters/SessionCookie'
-      responses:
-        '302':
-          description: Redirect to the OIDC provider logout URL.
-  /mobile-auth/token-exchange:
+  /auth/login:
     post:
       tags: [Auth]
-      operationId: exchangeMobileAuthorizationCode
-      summary: Exchange a mobile OIDC code for a session token
+      operationId: loginWithPassword
+      summary: Log in with email and password
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MobileTokenExchangeRequest'
+              $ref: '#/components/schemas/LoginBody'
       responses:
         '200':
-          description: Session created successfully.
+          description: Login successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MobileTokenExchangeSuccess'
+                $ref: '#/components/schemas/AppUser'
         '400':
-          description: Missing or invalid required fields.
+          description: Missing fields
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
         '401':
-          description: Token did not contain usable claims.
+          description: Invalid credentials
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
-        '500':
-          description: Token exchange failed.
+        '403':
+          description: Account disabled
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
-  /mobile-auth/logout:
-    post:
+  /auth/setup-status:
+    get:
       tags: [Auth]
-      operationId: logoutMobileSession
-      summary: Delete a mobile session token
-      parameters:
-        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+      operationId: getSetupStatus
+      summary: Check if first-time admin setup is needed
       responses:
         '200':
-          description: Logout processed.
+          description: Setup status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogoutSuccess'
+                $ref: '#/components/schemas/SetupStatus'
+  /auth/setup:
+    post:
+      tags: [Auth]
+      operationId: setupFirstAdmin
+      summary: Create first admin account (only works when no users exist)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetupBody'
+      responses:
+        '200':
+          description: Admin created and logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppUser'
+        '400':
+          description: Validation error or setup already done
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /logout:
+    get:
+      tags: [Auth]
+      operationId: logoutBrowserSession
+      summary: Clear the session cookie
+      parameters:
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '302':
+          description: Redirect to /login
   /storage/uploads/request-url:
     post:
       tags: [Storage]
@@ -495,13 +475,6 @@ paths:
                 $ref: "#/components/schemas/ErrorEnvelope"
 components:
   parameters:
-    AuthorizationSessionHeader:
-      name: Authorization
-      in: header
-      required: false
-      description: Opaque session token
-      schema:
-        type: string
     SessionCookie:
       name: sid
       in: cookie
@@ -519,19 +492,17 @@ components:
         - status
     AuthUser:
       type: object
-      required: [id, email, firstName, lastName, profileImageUrl]
+      required: [id, name, email, role]
       properties:
         id:
+          type: integer
+        name:
           type: string
         email:
           type: [string, 'null']
-          format: email
-        firstName:
-          type: [string, 'null']
-        lastName:
-          type: [string, 'null']
-        profileImageUrl:
-          type: [string, 'null']
+        role:
+          type: string
+          enum: [admin, advogado]
     AuthUserEnvelope:
       type: object
       required: [user]
@@ -540,32 +511,37 @@ components:
           oneOf:
             - $ref: '#/components/schemas/AuthUser'
             - type: 'null'
-    MobileTokenExchangeRequest:
+    LoginBody:
       type: object
-      required: [code, code_verifier, redirect_uri, state]
+      required: [email, password]
       properties:
-        code:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
           type: string
           minLength: 1
-        code_verifier:
-          type: string
-          minLength: 1
-        redirect_uri:
-          type: string
-          minLength: 1
-          format: uri
-        state:
-          type: string
-          minLength: 1
-        nonce:
-          type: string
-          minLength: 1
-    MobileTokenExchangeSuccess:
+    SetupStatus:
       type: object
-      required: [token]
+      required: [needsSetup]
       properties:
-        token:
+        needsSetup:
+          type: boolean
+    SetupBody:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
           type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          minLength: 6
     LogoutSuccess:
       type: object
       required: [success]
@@ -605,12 +581,10 @@ components:
           $ref: '#/components/schemas/UploadUrlRequest'
     AppUser:
       type: object
-      required: [id, replitUserId, name, email, role, active, createdAt]
+      required: [id, name, email, role, active, createdAt]
       properties:
         id:
           type: integer
-        replitUserId:
-          type: string
         name:
           type: string
         email:
@@ -625,16 +599,18 @@ components:
           format: date-time
     CreateUserBody:
       type: object
-      required: [replitUserId, name, role]
+      required: [name, email, password, role]
       properties:
-        replitUserId:
-          type: string
-          minLength: 1
         name:
           type: string
           minLength: 1
         email:
           type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          minLength: 6
         role:
           type: string
           enum: [admin, advogado]
@@ -648,6 +624,9 @@ components:
           enum: [admin, advogado]
         active:
           type: boolean
+        password:
+          type: string
+          minLength: 6
     Document:
       type: object
       required: [id, uploadedBy, title, fileName, mimeType, createdAt]
