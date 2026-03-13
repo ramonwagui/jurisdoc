@@ -119,7 +119,7 @@ export default function DocumentDetail() {
 }
 
 function ChatInterface({ documentId }: { documentId: number }) {
-  const { messages, sendMessage, isTyping, error } = useChatStream(documentId);
+  const { messages, sendMessage, isTyping, isRevealing, error } = useChatStream(documentId);
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -127,7 +127,7 @@ function ChatInterface({ documentId }: { documentId: number }) {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
     }
-  }, [messages, isTyping]);
+  }, [messages, isTyping, isRevealing]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,14 +166,19 @@ function ChatInterface({ documentId }: { documentId: number }) {
                   : 'bg-secondary border border-border text-foreground rounded-tl-sm'
               }`}>
                 {msg.content ? (
-                  <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: formatMessageContent(msg.content) }} />
-                ) : (
+                  <div className="prose prose-sm max-w-none">
+                    <span dangerouslySetInnerHTML={{ __html: formatMessageContent(msg.content) }} />
+                    {msg.role === 'assistant' && isRevealing && i === messages.length - 1 && (
+                      <span className="inline-block w-[2px] h-[1em] bg-foreground ml-0.5 align-middle animate-blink" />
+                    )}
+                  </div>
+                ) : msg.role === 'assistant' && i === messages.length - 1 && isTyping ? (
                   <div className="flex space-x-1 items-center h-5">
                     <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
                     <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                     <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></div>
                   </div>
-                )}
+                ) : null}
               </div>
             </motion.div>
           ))
