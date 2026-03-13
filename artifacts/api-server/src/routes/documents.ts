@@ -2,7 +2,6 @@ import { Router, type IRouter } from "express";
 import { eq, sql, desc, count } from "drizzle-orm";
 import { db, appUsersTable, documentsTable } from "@workspace/db";
 import {
-  CreateDocumentBody,
   GetDocumentParams,
   DeleteDocumentParams,
   ListDocumentsQueryParams,
@@ -31,7 +30,6 @@ router.get("/documents", async (req, res) => {
       uploadedBy: documentsTable.uploadedBy,
       title: documentsTable.title,
       fileName: documentsTable.fileName,
-      storagePath: documentsTable.storagePath,
       mimeType: documentsTable.mimeType,
       hasExtractedText: sql<boolean>`length(${documentsTable.extractedText}) > 0`,
       createdAt: documentsTable.createdAt,
@@ -49,33 +47,6 @@ router.get("/documents", async (req, res) => {
     page,
     totalPages: Math.ceil(total / limit),
   });
-});
-
-router.post("/documents", async (req, res) => {
-  if (!req.isAuthenticated() || !req.appUser) {
-    res.status(401).json({ error: "Não autenticado" });
-    return;
-  }
-
-  const parsed = CreateDocumentBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
-  }
-
-  const [doc] = await db
-    .insert(documentsTable)
-    .values({
-      uploadedBy: req.appUser.id,
-      title: parsed.data.title,
-      fileName: parsed.data.fileName,
-      storagePath: parsed.data.storagePath,
-      mimeType: parsed.data.mimeType,
-      extractedText: parsed.data.extractedText || "",
-    })
-    .returning();
-
-  res.status(201).json(doc);
 });
 
 router.get("/documents/search", async (req, res) => {

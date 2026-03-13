@@ -15,10 +15,11 @@ Full-stack Brazilian law firm SaaS MVP with Replit Auth, document management (PD
 - **Frontend**: React + Vite + TailwindCSS + shadcn/ui
 - **Auth**: Replit OIDC Auth
 - **AI**: Gemini 2.5 Flash (via Replit AI Integrations)
-- **Storage**: Replit Object Storage (GCS presigned URLs)
+- **Storage**: Replit Object Storage (GCS)
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
+- **Server-side extraction**: pdf-parse (PDF), mammoth (DOCX)
 
 ## Structure
 
@@ -51,20 +52,32 @@ artifacts-monorepo/
 
 First user to log in is auto-created as admin.
 
+## Security Architecture
+
+### Middleware Pipeline
+1. `authMiddleware` — OIDC session validation + token refresh
+2. `appUserMiddleware` — auto-provisions `app_users` row on every authenticated request (first user = admin)
+3. `activeUserGuard` — blocks deactivated users from all protected routes (returns 403)
+
+### Access Control
+- Storage object retrieval verifies document exists in DB before serving files (prevents IDOR)
+- Document delete requires ownership or admin role
+- Admin routes (user CRUD) require `role === "admin"`
+
 ## API Routes (all prefixed `/api`)
 
 - `GET /api/healthz` — Health check
 - Auth routes — `/api/auth/*` (Replit OIDC)
-- Storage routes — `/api/storage/*` (object upload/download)
-- `GET /api/users/me` — Current user profile (auto-creates on first login)
+- `POST /api/storage/upload-document` — Server-side multipart upload with text extraction
+- `GET /api/storage/objects/*` — Serve stored files (auth + document ownership check)
+- `GET /api/users/me` — Current user profile
 - `GET /api/users` — List all users (admin only)
 - `POST /api/users` — Create user (admin only)
 - `PATCH /api/users/:id` — Update user (admin only)
 - `GET /api/documents` — List documents (paginated)
-- `POST /api/documents` — Create document record
 - `GET /api/documents/search?q=...` — Full-text search (Portuguese tsquery)
 - `GET /api/documents/:id` — Get document detail
-- `DELETE /api/documents/:id` — Delete document
+- `DELETE /api/documents/:id` — Delete document (owner or admin)
 - `POST /api/documents/:id/chat` — SSE stream AI chat with document
 
 ## Frontend Pages
@@ -76,10 +89,10 @@ First user to log in is auto-created as admin.
 
 ## Document Upload Flow
 
-1. Client extracts text from PDF (pdf.js) or DOCX (mammoth) in browser
-2. Client requests presigned URL via `POST /api/storage/upload-url`
-3. Client uploads file directly to GCS via PUT
-4. Client creates document record via `POST /api/documents` with extracted text
+1. Client sends file via multipart POST to `/api/storage/upload-document`
+2. Server stores file to object storage (GCS)
+3. Server extracts text using pdf-parse (PDF) or mammoth (DOCX)
+4. Server creates document record atomically with extracted text
 
 ## Key Design Decisions
 
@@ -88,6 +101,7 @@ First user to log in is auto-created as admin.
 - SSE chat uses POST + ReadableStream (not EventSource) since body is required
 - CORS locked to Replit domains only
 - Portuguese full-text search with GIN index for fast lookups
+- Server-side text extraction ensures integrity (client cannot tamper with extracted text)
 
 ## TypeScript & Composite Projects
 

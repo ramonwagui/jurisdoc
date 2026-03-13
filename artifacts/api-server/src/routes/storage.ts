@@ -1,6 +1,11 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { Readable } from "stream";
 import { sql } from "drizzle-orm";
+import multer from "multer";
+import * as pdfParseModule from "pdf-parse";
+import mammoth from "mammoth";
+
+const pdfParse = (pdfParseModule as { default?: typeof pdfParseModule } & typeof pdfParseModule).default || pdfParseModule;
 import { db, documentsTable } from "@workspace/db";
 import {
   RequestUploadUrlBody,
@@ -10,6 +15,7 @@ import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage"
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
 
 /**
  * POST /storage/uploads/request-url
@@ -46,6 +52,82 @@ router.post("/storage/uploads/request-url", async (req: Request, res: Response) 
   } catch (error) {
     console.error("Error generating upload URL:", error);
     res.status(500).json({ error: "Failed to generate upload URL" });
+  }
+});
+
+/**
+ * POST /storage/upload-document
+ *
+ * Accept multipart file upload, store to object storage,
+ * extract text server-side using pdf-parse/mammoth,
+ * and create the document record atomically.
+ */
+router.post("/storage/upload-document", upload.single("file"), async (req: Request, res: Response) => {
+  if (!req.isAuthenticated() || !req.appUser) {
+    res.status(401).json({ error: "Não autenticado" });
+    return;
+  }
+
+  const file = req.file;
+  if (!file) {
+    res.status(400).json({ error: "Nenhum arquivo enviado" });
+    return;
+  }
+
+  const isPdf = file.buffer.length >= 5 && file.buffer.subarray(0, 5).toString() === "%PDF-";
+  const isDocx =
+    file.buffer.length >= 4 &&
+    file.buffer[0] === 0x50 &&
+    file.buffer[1] === 0x4b &&
+    file.buffer[2] === 0x03 &&
+    file.buffer[3] === 0x04;
+
+  if (!isPdf && !isDocx) {
+    res.status(400).json({ error: "Tipo de arquivo não suportado. Envie PDF ou DOCX." });
+    return;
+  }
+
+  const validatedMimeType = isPdf
+    ? "application/pdf"
+    : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+  try {
+    const { objectPath } = await objectStorageService.uploadObjectEntity(
+      file.buffer,
+      validatedMimeType,
+    );
+
+    let extractedText = "";
+    try {
+      if (isPdf) {
+        const pdfResult = await pdfParse(file.buffer);
+        extractedText = pdfResult.text;
+      } else {
+        const docxResult = await mammoth.extractRawText({ buffer: file.buffer });
+        extractedText = docxResult.value;
+      }
+    } catch (extractErr) {
+      console.error("Text extraction failed:", extractErr);
+    }
+
+    const title = req.body.title || file.originalname.replace(/\.[^/.]+$/, "");
+
+    const [doc] = await db
+      .insert(documentsTable)
+      .values({
+        uploadedBy: req.appUser.id,
+        title,
+        fileName: file.originalname,
+        storagePath: objectPath,
+        mimeType: validatedMimeType,
+        extractedText,
+      })
+      .returning();
+
+    res.status(201).json(doc);
+  } catch (error) {
+    console.error("Upload error:", error);
+    res.status(500).json({ error: "Falha ao processar o upload" });
   }
 });
 
