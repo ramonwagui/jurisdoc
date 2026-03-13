@@ -151,6 +151,7 @@ router.post("/processos", async (req, res) => {
     return;
   }
 
+  const advogadoId = req.appUser.role === "admin" ? parsed.data.advogadoId : req.appUser.id;
   const numero = parsed.data.numero?.trim() || generateNumero();
 
   try {
@@ -165,7 +166,7 @@ router.post("/processos", async (req, res) => {
         area: parsed.data.area,
         status: parsed.data.status,
         descricao: parsed.data.descricao || null,
-        advogadoId: parsed.data.advogadoId,
+        advogadoId,
       })
       .returning();
 
@@ -284,7 +285,13 @@ router.patch("/processos/:id", async (req, res) => {
   if (parsed.data.area !== undefined) updateData.area = parsed.data.area;
   if (parsed.data.status !== undefined) updateData.status = parsed.data.status;
   if (parsed.data.descricao !== undefined) updateData.descricao = parsed.data.descricao;
-  if (parsed.data.advogadoId !== undefined) updateData.advogadoId = parsed.data.advogadoId;
+  if (parsed.data.advogadoId !== undefined) {
+    if (req.appUser!.role !== "admin") {
+      res.status(403).json({ error: "Apenas administradores podem transferir processos" });
+      return;
+    }
+    updateData.advogadoId = parsed.data.advogadoId;
+  }
 
   const [updated] = await db
     .update(processosTable)
@@ -382,8 +389,9 @@ router.patch("/processos/:id/andamentos/:andId", async (req, res) => {
     return;
   }
 
+  const processoId = Number(req.params.id);
   const andId = Number(req.params.andId);
-  if (isNaN(andId)) {
+  if (isNaN(andId) || isNaN(processoId)) {
     res.status(400).json({ error: "ID inválido" });
     return;
   }
@@ -391,7 +399,7 @@ router.patch("/processos/:id/andamentos/:andId", async (req, res) => {
   const [existing] = await db
     .select()
     .from(processoAndamentosTable)
-    .where(eq(processoAndamentosTable.id, andId))
+    .where(and(eq(processoAndamentosTable.id, andId), eq(processoAndamentosTable.processoId, processoId)))
     .limit(1);
 
   if (!existing) {
@@ -431,8 +439,9 @@ router.delete("/processos/:id/andamentos/:andId", async (req, res) => {
     return;
   }
 
+  const processoId = Number(req.params.id);
   const andId = Number(req.params.andId);
-  if (isNaN(andId)) {
+  if (isNaN(andId) || isNaN(processoId)) {
     res.status(400).json({ error: "ID inválido" });
     return;
   }
@@ -440,7 +449,7 @@ router.delete("/processos/:id/andamentos/:andId", async (req, res) => {
   const [existing] = await db
     .select()
     .from(processoAndamentosTable)
-    .where(eq(processoAndamentosTable.id, andId))
+    .where(and(eq(processoAndamentosTable.id, andId), eq(processoAndamentosTable.processoId, processoId)))
     .limit(1);
 
   if (!existing) {
