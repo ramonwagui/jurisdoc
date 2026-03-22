@@ -37,36 +37,36 @@ router.post("/chat", async (req, res) => {
 
   try {
     const history = body.data.history || [];
-    const chatMessages = [
+    const messages = [
       {
-        role: "user" as const,
-        parts: [{ text: `Você é um assistente jurídico especializado. Analise e responda perguntas ESTRITAMENTE com base no seguinte documento legal. Não invente informações que não estejam no documento. Se a resposta não puder ser encontrada no documento, diga claramente que a informação não consta no documento fornecido.
+        role: "system" as const,
+        content: `Você é um assistente jurídico especializado. Analise e responda perguntas ESTRITAMENTE com base no seguinte documento legal. Não invente informações que não estejam no documento. Se a resposta não puder ser encontrada no documento, diga claramente que a informação não consta no documento fornecido.
 
 DOCUMENTO: "${doc.title}"
 ---
 ${doc.extractedText}
 ---
 
-Responda sempre em português brasileiro de forma clara e profissional.` }],
+Responda sempre em português brasileiro de forma clara e profissional.`,
       },
       ...history.map((m: { role: string; content: string }) => ({
-        role: (m.role === "assistant" ? "model" : "user") as "model" | "user",
-        parts: [{ text: m.content }],
+        role: (m.role === "assistant" ? "assistant" : "user") as "assistant" | "user",
+        content: m.content,
       })),
       {
         role: "user" as const,
-        parts: [{ text: body.data.message }],
+        content: body.data.message,
       },
     ];
 
-    const stream = await ai.models.generateContentStream({
-      model: "gemini-2.5-flash",
-      contents: chatMessages,
-      config: { maxOutputTokens: 8192 },
+    const stream = await ai.chat.completions.create({
+      model: "gpt-4o",
+      messages: messages,
+      stream: true,
     });
 
     for await (const chunk of stream) {
-      const text = chunk.text;
+      const text = chunk.choices[0]?.delta?.content;
       if (text) {
         res.write(`data: ${JSON.stringify({ content: text })}\n\n`);
       }

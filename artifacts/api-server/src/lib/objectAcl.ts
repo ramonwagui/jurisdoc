@@ -68,15 +68,21 @@ function createObjectAccessGroup(
 }
 
 export async function setObjectAclPolicy(
-  objectFile: File,
+  objectFile:
+    | File
+    | {
+        name: string;
+        exists: () => Promise<boolean>;
+        setMetadata: (m: unknown) => Promise<void>;
+      },
   aclPolicy: ObjectAclPolicy,
 ): Promise<void> {
-  const [exists] = await objectFile.exists();
+  const [exists] = await (objectFile as File).exists();
   if (!exists) {
-    throw new Error(`Object not found: ${objectFile.name}`);
+    throw new Error(`Object not found: ${(objectFile as File).name}`);
   }
 
-  await objectFile.setMetadata({
+  await (objectFile as File).setMetadata({
     metadata: {
       [ACL_POLICY_METADATA_KEY]: JSON.stringify(aclPolicy),
     },
@@ -84,10 +90,11 @@ export async function setObjectAclPolicy(
 }
 
 export async function getObjectAclPolicy(
-  objectFile: File,
+  objectFile: File | { getMetadata: () => Promise<unknown[]> },
 ): Promise<ObjectAclPolicy | null> {
-  const [metadata] = await objectFile.getMetadata();
-  const aclPolicy = metadata?.metadata?.[ACL_POLICY_METADATA_KEY];
+  const [metadata] = await (objectFile as File).getMetadata();
+  const aclPolicy = (metadata as { metadata?: Record<string, unknown> })
+    ?.metadata?.[ACL_POLICY_METADATA_KEY];
   if (!aclPolicy) {
     return null;
   }
@@ -100,7 +107,7 @@ export async function canAccessObject({
   requestedPermission,
 }: {
   userId?: string;
-  objectFile: File;
+  objectFile: File | { getMetadata: () => Promise<unknown[]> };
   requestedPermission: ObjectPermission;
 }): Promise<boolean> {
   const aclPolicy = await getObjectAclPolicy(objectFile);

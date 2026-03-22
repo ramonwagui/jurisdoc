@@ -523,20 +523,16 @@ router.post("/processos/consultar", async (req, res) => {
 
   if (!processo) {
     try {
-      const stream = await ai.models.generateContentStream({
-        model: "gemini-2.5-flash",
-        contents: [{
+      const response = await ai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{
           role: "user",
-          parts: [{ text: `Você é o assistente virtual do escritório de advocacia JurisDoc. O cliente informou ${cpf ? `CPF: ${cpf}` : `número do processo: ${numero}`}, mas não encontramos nenhum processo com esses dados em nosso sistema. Responda de forma educada em português brasileiro, informando que não foi possível localizar o processo e sugerindo que o cliente entre em contato diretamente com o escritório para verificar os dados. Seja breve e profissional.` }],
+          content: `Você é o assistente virtual do escritório de advocacia JurisDoc. O cliente informou ${cpf ? `CPF: ${cpf}` : `número do processo: ${numero}`}, mas não encontramos nenhum processo com esses dados em nosso sistema. Responda de forma educada em português brasileiro, informando que não foi possível localizar o processo e sugerindo que o cliente entre em contato diretamente com o escritório para verificar os dados. Seja breve e profissional.`
         }],
-        config: { maxOutputTokens: 512 },
+        max_tokens: 512,
       });
 
-      let resposta = "";
-      for await (const chunk of stream) {
-        if (chunk.text) resposta += chunk.text;
-      }
-
+      const resposta = response.choices[0]?.message?.content || "Não foi possível localizar o processo.";
       res.json({ resposta, processo: null });
     } catch {
       res.json({
@@ -624,16 +620,13 @@ Instruções:
 - Seja objetivo e reconfortante`;
 
   try {
-    const stream = await ai.models.generateContentStream({
-      model: "gemini-2.5-flash",
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      config: { maxOutputTokens: 2048 },
+    const response = await ai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 2048,
     });
 
-    let resposta = "";
-    for await (const chunk of stream) {
-      if (chunk.text) resposta += chunk.text;
-    }
+    const resposta = response.choices[0]?.message?.content || "Erro ao gerar resposta.";
 
     res.json({
       resposta,
