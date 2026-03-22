@@ -16,14 +16,15 @@ RUN npm run build:production
 FROM base AS runner
 ENV NODE_ENV=production PORT=8080
 
-WORKDIR /app/artifacts/api-server
+WORKDIR /app
 
-COPY --from=builder /app/artifacts/api-server/dist ./dist
+COPY --from=builder /app/artifacts/api-server/dist ./artifacts/api-server/dist
 COPY --from=builder /app/artifacts/web/dist ./public
-COPY --from=builder /app/artifacts/api-server/package.json ./
-
-RUN npm install --omit=dev
+COPY --from=deps /app/artifacts/api-server/node_modules ./artifacts/api-server/node_modules
+COPY --from=deps /app/artifacts/api-server/package.json ./artifacts/api-server/package.json
+COPY --from=deps /app/lib ./lib
+COPY package.json pnpm-lock.yaml tsconfig.json tsconfig.base.json ./
 
 EXPOSE 8080
 
-CMD ["node", "dist/index.cjs"]
+CMD ["node", "artifacts/api-server/dist/index.cjs"]
