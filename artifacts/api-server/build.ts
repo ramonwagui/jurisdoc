@@ -10,8 +10,11 @@ const __dirname = path.dirname(__filename);
 // which helps cold start times without risking some
 // packages that are not bundle compatible
 const allowlist = [
+  "@aws-sdk/client-s3",
+  "@aws-sdk/s3-request-presigner",
   "@google/generative-ai",
   "axios",
+  "cookie-parser",
   "connect-pg-simple",
   "cors",
   "date-fns",
@@ -20,14 +23,18 @@ const allowlist = [
   "express",
   "express-rate-limit",
   "express-session",
+  "google-auth-library",
   "jsonwebtoken",
+  "mammoth",
   "memorystore",
+  "morgan",
   "multer",
   "nanoid",
   "nodemailer",
   "openai",
   "passport",
   "passport-local",
+  "pdf-parse",
   "pg",
   "stripe",
   "uuid",
@@ -51,7 +58,7 @@ async function buildAll() {
   const externals = allDeps.filter(
     (dep) =>
       !allowlist.includes(dep) &&
-      !(pkg.dependencies?.[dep]?.startsWith("workspace:")),
+      !pkg.dependencies?.[dep]?.startsWith("workspace:"),
   );
 
   await esbuild({
