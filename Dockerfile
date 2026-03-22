@@ -7,23 +7,19 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json tsconfig.base
 COPY lib ./lib
 COPY artifacts ./artifacts
 COPY scripts ./scripts
-RUN npm install
+RUN pnpm install --frozen-lockfile
 
 FROM deps AS builder
 ENV NODE_ENV=production
-RUN npm run build:production
+RUN pnpm run build:production
 
-FROM base AS runner
+FROM deps AS runner
 ENV NODE_ENV=production PORT=8080
 
 WORKDIR /app
 
 COPY --from=builder /app/artifacts/api-server/dist ./artifacts/api-server/dist
 COPY --from=builder /app/artifacts/web/dist ./public
-COPY --from=deps /app/artifacts/api-server/node_modules ./artifacts/api-server/node_modules
-COPY --from=deps /app/artifacts/api-server/package.json ./artifacts/api-server/package.json
-COPY --from=deps /app/lib ./lib
-COPY package.json pnpm-lock.yaml tsconfig.json tsconfig.base.json ./
 
 EXPOSE 8080
 
