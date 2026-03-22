@@ -112,7 +112,7 @@ app.use("/api", router);
 
 app.use(express.static(PUBLIC_DIR));
 
-app.get("*", (_req: Request, res: Response) => {
+app.get("/*", (_req: Request, res: Response) => {
   const indexPath = path.join(PUBLIC_DIR, "index.html");
   res.sendFile(indexPath);
 });
