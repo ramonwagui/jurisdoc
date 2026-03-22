@@ -24,9 +24,8 @@ COPY --from=builder /app/artifacts/api-server/dist ./dist
 COPY --from=builder /app/artifacts/web/dist ./public
 COPY --from=builder /app/artifacts/api-server/package.json ./
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
-WORKDIR /app/artifacts/api-server
 EXPOSE 8080
 
 CMD ["node", "dist/index.cjs"]
