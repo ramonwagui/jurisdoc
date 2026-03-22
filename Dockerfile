@@ -13,7 +13,7 @@ RUN pnpm install --frozen-lockfile
 
 FROM deps AS builder
 ENV NODE_ENV=production
-RUN pnpm run build
+RUN pnpm run build:production
 
 FROM base AS runner
 ENV NODE_ENV=production PORT=8080

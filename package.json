@@ -5,6 +5,7 @@
   "scripts": {
     "test": "echo \"No tests specified\" && exit 0",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "build:production": "pnpm run typecheck && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/web run build",
     "dev:web": "npx pnpm --filter @workspace/web dev",
     "dev:api": "npx pnpm --filter @workspace/api-server dev",
     "typecheck:libs": "tsc --build",
