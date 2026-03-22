@@ -18,11 +18,14 @@ RUN pnpm run build:production
 FROM base AS runner
 ENV NODE_ENV=production PORT=8080
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/lib ./lib
+WORKDIR /app
+
 COPY --from=builder /app/artifacts/api-server/dist ./dist
 COPY --from=builder /app/artifacts/web/dist ./public
-COPY package.json ./
+COPY --from=deps /app/artifacts ./artifacts
+COPY --from=deps /app/lib ./lib
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json tsconfig.base.json ./
+RUN npm install --omit=dev --ignore-scripts
 
 EXPOSE 8080
 
