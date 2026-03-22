@@ -17,6 +17,7 @@ RUN pnpm run build:production
 
 FROM base AS runner
 ENV NODE_ENV=production PORT=8080
+ENV NODE_PATH=/app/artifacts/api-server/node_modules
 
 WORKDIR /app
 

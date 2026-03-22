@@ -14,7 +14,8 @@ import { ObjectStorageService } from "./lib/objectStorage";
 
 const app: Express = express();
 
-const PUBLIC_DIR = path.join(process.cwd(), "public");
+const ROOT_DIR = path.resolve(__dirname, "../..");
+const PUBLIC_DIR = path.join(ROOT_DIR, "public");
 
 console.log("=== APP.TS LOADED ===");
 
@@ -112,7 +113,8 @@ app.use("/api", router);
 app.use(express.static(PUBLIC_DIR));
 
 app.get("*", (_req: Request, res: Response) => {
-  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
+  const indexPath = path.join(PUBLIC_DIR, "index.html");
+  res.sendFile(indexPath);
 });
 
 export default app;
