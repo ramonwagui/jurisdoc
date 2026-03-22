@@ -21,7 +21,7 @@ ENV NODE_ENV=production PORT=8080
 WORKDIR /app
 
 COPY --from=builder /app/artifacts/api-server/dist ./artifacts/api-server/dist
-COPY --from=builder /app/artifacts/web/dist ./public
+COPY --from=builder /app/artifacts/web/dist/public ./public
 
 EXPOSE 8080
 
