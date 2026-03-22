@@ -20,13 +20,13 @@ ENV NODE_ENV=production PORT=8080
 
 WORKDIR /app/artifacts/api-server
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/lib ./lib
 COPY --from=builder /app/artifacts/api-server/dist ./dist
 COPY --from=builder /app/artifacts/web/dist ./public
-COPY --from=deps /app/artifacts ./artifacts
-COPY package.json pnpm-lock.yaml tsconfig.json ./
+COPY --from=builder /app/artifacts/api-server/package.json ./
 
+RUN pnpm install --frozen-lockfile
+
+WORKDIR /app/artifacts/api-server
 EXPOSE 8080
 
 CMD ["node", "dist/index.cjs"]
