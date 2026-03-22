@@ -11,7 +11,7 @@ export async function generateImage(
     response_format: "b64_json",
   });
 
-  const b64_json = response.data[0]?.b64_json;
+  const b64_json = response.data?.[0]?.b64_json;
 
   if (!b64_json) {
     throw new Error("No image data in response");
