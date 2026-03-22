@@ -22,8 +22,7 @@ WORKDIR /app
 
 COPY --from=builder /app/artifacts/api-server/dist ./dist
 COPY --from=builder /app/artifacts/web/dist ./public
-COPY --from=deps /app/artifacts/api-server/node_modules ./node_modules
-COPY --from=deps /app/lib ./lib
+COPY --from=deps /app/node_modules ./node_modules
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json tsconfig.base.json ./
 
 EXPOSE 8080
