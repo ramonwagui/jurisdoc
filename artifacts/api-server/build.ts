@@ -18,6 +18,8 @@ async function buildAll() {
     ...Object.keys(pkg.devDependencies || {}),
   ];
 
+  const externalDeps = allDeps.filter((dep) => !dep.startsWith("@workspace/"));
+
   await esbuild({
     entryPoints: [path.resolve(__dirname, "src/index.ts")],
     platform: "node",
@@ -28,7 +30,7 @@ async function buildAll() {
       "process.env.NODE_ENV": '"production"',
     },
     minify: true,
-    external: allDeps,
+    external: externalDeps,
     logLevel: "info",
   });
 }
