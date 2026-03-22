@@ -17,7 +17,6 @@ RUN pnpm run build:production
 
 FROM base AS runner
 ENV NODE_ENV=production PORT=8080
-ENV NODE_PATH=/app/artifacts/api-server/node_modules
 
 WORKDIR /app
 
@@ -30,6 +29,7 @@ WORKDIR /app/artifacts/api-server
 RUN pnpm install --frozen-lockfile
 
 WORKDIR /app
+
 EXPOSE 8080
 
-CMD ["node", "artifacts/api-server/dist/index.cjs"]
+ENTRYPOINT ["node", "/app/artifacts/api-server/dist/index.cjs"]
