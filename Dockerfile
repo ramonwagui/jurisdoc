@@ -18,12 +18,12 @@ RUN pnpm run build:production
 FROM base AS runner
 ENV NODE_ENV=production PORT=8080
 
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/artifacts/api-server/dist ./dist
+COPY --from=builder /app/artifacts/web/dist ./public
 COPY --from=deps /app/artifacts/api-server/node_modules ./artifacts/api-server/node_modules
 COPY --from=deps /app/artifacts/web/node_modules ./artifacts/web/node_modules
 COPY --from=deps /app/lib ./lib
-COPY --from=builder /app/artifacts/api-server/dist ./dist
-COPY --from=builder /app/artifacts/web/dist ./public
+COPY --from=deps /app/node_modules ./node_modules
 COPY package.json ./
 
 EXPOSE 8080
