@@ -18,18 +18,15 @@ RUN pnpm run build:production
 FROM base AS runner
 ENV NODE_ENV=production PORT=8080
 
-WORKDIR /app
+WORKDIR /app/artifacts/api-server
 
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/lib ./lib
+COPY --from=builder /app/artifacts/api-server/dist ./dist
 COPY --from=builder /app/artifacts/web/dist ./public
 COPY --from=deps /app/artifacts ./artifacts
-COPY --from=deps /app/lib ./lib
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json tsconfig.base.json ./
-
-WORKDIR /app/artifacts/api-server
-RUN pnpm install --frozen-lockfile
-
-WORKDIR /app
+COPY package.json pnpm-lock.yaml tsconfig.json ./
 
 EXPOSE 8080
 
-ENTRYPOINT ["node", "/app/artifacts/api-server/dist/index.cjs"]
+CMD ["node", "dist/index.cjs"]
