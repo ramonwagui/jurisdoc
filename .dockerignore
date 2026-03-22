@@ -5,11 +5,9 @@ node_modules
 .env
 .env.*
 !.env.example
-artifacts/web/dist
-artifacts/api-server/dist
+uploads
 coverage
 .vscode
 .idea
 *.log
 npm-debug.log*
-uploads
