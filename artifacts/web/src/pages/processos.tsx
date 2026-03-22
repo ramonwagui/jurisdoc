@@ -1,9 +1,23 @@
 import { useState } from "react";
-import { useListProcessos, useCreateProcesso, useListUsers, getListProcessosQueryKey } from "@workspace/api-client-react";
+import {
+  useListProcessos,
+  useCreateProcesso,
+  useListUsers,
+  getListProcessosQueryKey,
+  getListUsersQueryKey,
+} from "@workspace/api-client-react";
 import type { Processo, CreateProcessoBody } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout";
 import { Input, Button, Card } from "@/components/ui-components";
-import { Search, Plus, Briefcase, Calendar, ChevronRight, Filter, X } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Briefcase,
+  Calendar,
+  ChevronRight,
+  Filter,
+  X,
+} from "lucide-react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDate } from "@/lib/utils";
@@ -49,7 +63,9 @@ const areaColors: Record<string, string> = {
 export default function Processos() {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 400);
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(
+    undefined,
+  );
   const [areaFilter, setAreaFilter] = useState<string | undefined>(undefined);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -74,20 +90,31 @@ export default function Processos() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
             <motion.h1
-              initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
               className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2"
             >
               Processos Jurídicos
             </motion.h1>
             <motion.p
-              initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
               className="text-base text-muted-foreground max-w-2xl"
             >
               Gerencie e acompanhe todos os processos do escritório.
             </motion.p>
           </div>
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
-            <Button size="lg" onClick={() => setIsModalOpen(true)} className="w-full md:w-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Button
+              size="lg"
+              onClick={() => setIsModalOpen(true)}
+              className="w-full md:w-auto"
+            >
               <Plus className="w-5 h-5 mr-2" />
               Novo Processo
             </Button>
@@ -95,7 +122,9 @@ export default function Processos() {
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
           className="relative max-w-3xl mb-6 group"
         >
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -110,12 +139,16 @@ export default function Processos() {
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
           className="flex flex-wrap gap-2 mb-8"
         >
           <div className="flex items-center gap-1 mr-2">
             <Filter className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground font-medium">Status:</span>
+            <span className="text-sm text-muted-foreground font-medium">
+              Status:
+            </span>
           </div>
           <button
             onClick={() => setStatusFilter(undefined)}
@@ -130,7 +163,9 @@ export default function Processos() {
           {Object.entries(statusLabels).map(([key, label]) => (
             <button
               key={key}
-              onClick={() => setStatusFilter(statusFilter === key ? undefined : key)}
+              onClick={() =>
+                setStatusFilter(statusFilter === key ? undefined : key)
+              }
               className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                 statusFilter === key
                   ? "bg-primary text-primary-foreground border-primary"
@@ -144,7 +179,9 @@ export default function Processos() {
           <div className="w-px h-6 bg-border self-center mx-2" />
 
           <div className="flex items-center gap-1 mr-2">
-            <span className="text-sm text-muted-foreground font-medium">Área:</span>
+            <span className="text-sm text-muted-foreground font-medium">
+              Área:
+            </span>
           </div>
           <button
             onClick={() => setAreaFilter(undefined)}
@@ -159,7 +196,9 @@ export default function Processos() {
           {Object.entries(areaLabels).map(([key, label]) => (
             <button
               key={key}
-              onClick={() => setAreaFilter(areaFilter === key ? undefined : key)}
+              onClick={() =>
+                setAreaFilter(areaFilter === key ? undefined : key)
+              }
               className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                 areaFilter === key
                   ? "bg-primary text-primary-foreground border-primary"
@@ -172,7 +211,10 @@ export default function Processos() {
 
           {hasFilters && (
             <button
-              onClick={() => { setStatusFilter(undefined); setAreaFilter(undefined); }}
+              onClick={() => {
+                setStatusFilter(undefined);
+                setAreaFilter(undefined);
+              }}
               className="px-3 py-1.5 rounded-full text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-1"
             >
               <X className="w-3.5 h-3.5" /> Limpar
@@ -184,7 +226,12 @@ export default function Processos() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-medium text-foreground flex items-center gap-2">
               Processos
-              {isLoading && <span className="flex h-2.5 w-2.5 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" /><span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" /></span>}
+              {isLoading && (
+                <span className="flex h-2.5 w-2.5 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
+                </span>
+              )}
             </h2>
             <span className="text-sm text-muted-foreground bg-secondary px-3 py-1 rounded-full border border-border">
               {total} encontrados
@@ -197,7 +244,8 @@ export default function Processos() {
                 {processos.map((proc, i) => (
                   <motion.div
                     key={proc.id}
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.03 }}
                     layout
                   >
@@ -209,7 +257,9 @@ export default function Processos() {
           ) : !isLoading ? (
             <div className="text-center py-20 bg-card rounded-2xl border-2 border-dashed border-border">
               <Briefcase className="w-14 h-14 mx-auto text-muted-foreground mb-4 opacity-50" />
-              <h3 className="text-lg font-medium text-foreground mb-2">Nenhum processo encontrado</h3>
+              <h3 className="text-lg font-medium text-foreground mb-2">
+                Nenhum processo encontrado
+              </h3>
               <p className="text-muted-foreground">
                 {searchTerm || hasFilters
                   ? "Tente usar termos diferentes ou remover os filtros."
@@ -240,28 +290,39 @@ function ProcessoCard({ processo }: { processo: Processo }) {
             <Briefcase className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0 pr-8">
-            <h3 className="text-base font-display font-semibold text-foreground truncate" title={processo.titulo}>
+            <h3
+              className="text-base font-display font-semibold text-foreground truncate"
+              title={processo.titulo}
+            >
               {processo.titulo}
             </h3>
-            <p className="text-sm text-muted-foreground truncate">{processo.numero}</p>
+            <p className="text-sm text-muted-foreground truncate">
+              {processo.numero}
+            </p>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-2 mb-3">
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColors[processo.status] || statusColors.em_andamento}`}>
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColors[processo.status] || statusColors.em_andamento}`}
+          >
             {statusLabels[processo.status] || processo.status}
           </span>
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${areaColors[processo.area] || areaColors.outro}`}>
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${areaColors[processo.area] || areaColors.outro}`}
+          >
             {areaLabels[processo.area] || processo.area}
           </span>
         </div>
 
         <p className="text-sm text-foreground mb-1">
-          <span className="text-muted-foreground">Cliente:</span> {processo.clienteNome}
+          <span className="text-muted-foreground">Cliente:</span>{" "}
+          {processo.clienteNome}
         </p>
         {processo.advogadoNome && (
           <p className="text-sm text-foreground mb-1">
-            <span className="text-muted-foreground">Advogado:</span> {processo.advogadoNome}
+            <span className="text-muted-foreground">Advogado:</span>{" "}
+            {processo.advogadoNome}
           </p>
         )}
 
@@ -278,7 +339,9 @@ function ProcessoModal({ onClose }: { onClose: () => void }) {
   const createMutation = useCreateProcesso();
   const { user: currentUser } = useCurrentUser();
   const isAdmin = currentUser?.role === "admin";
-  const { data: users } = useListUsers({ query: { enabled: isAdmin } });
+  const { data: users } = useListUsers({
+    query: { enabled: isAdmin, queryKey: getListUsersQueryKey() },
+  });
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -296,8 +359,15 @@ function ProcessoModal({ onClose }: { onClose: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.titulo.trim() || !form.clienteNome.trim() || !form.clienteCpf.trim()) {
-      toast({ title: "Preencha os campos obrigatórios", variant: "destructive" });
+    if (
+      !form.titulo.trim() ||
+      !form.clienteNome.trim() ||
+      !form.clienteCpf.trim()
+    ) {
+      toast({
+        title: "Preencha os campos obrigatórios",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -307,11 +377,15 @@ function ProcessoModal({ onClose }: { onClose: () => void }) {
         clienteNome: form.clienteNome.trim(),
         clienteCpf: form.clienteCpf.trim(),
         ...(form.numero.trim() ? { numero: form.numero.trim() } : {}),
-        ...(form.clienteTelefone.trim() ? { clienteTelefone: form.clienteTelefone.trim() } : {}),
+        ...(form.clienteTelefone.trim()
+          ? { clienteTelefone: form.clienteTelefone.trim() }
+          : {}),
         area: form.area as CreateProcessoBody["area"],
         status: form.status as CreateProcessoBody["status"],
         ...(form.descricao.trim() ? { descricao: form.descricao.trim() } : {}),
-        ...(currentUser?.role === "admin" && form.advogadoId ? { advogadoId: form.advogadoId } : {}),
+        ...(currentUser?.role === "admin" && form.advogadoId
+          ? { advogadoId: form.advogadoId }
+          : {}),
       };
 
       await createMutation.mutateAsync({ data: body });
@@ -319,7 +393,8 @@ function ProcessoModal({ onClose }: { onClose: () => void }) {
       toast({ title: "Processo criado com sucesso" });
       onClose();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Erro ao criar processo";
+      const message =
+        err instanceof Error ? err.message : "Erro ao criar processo";
       toast({ title: "Erro", description: message, variant: "destructive" });
     }
   };
@@ -328,67 +403,145 @@ function ProcessoModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-foreground/20 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-foreground/20 backdrop-blur-sm"
+        onClick={onClose}
+      />
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="relative w-full max-w-lg bg-card rounded-2xl p-8 shadow-xl border border-border max-h-[90vh] overflow-y-auto"
       >
-        <h2 className="text-2xl font-display font-semibold text-foreground mb-6">Novo Processo</h2>
+        <h2 className="text-2xl font-display font-semibold text-foreground mb-6">
+          Novo Processo
+        </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">Número do Processo <span className="text-muted-foreground/60 font-normal">(opcional, será gerado automaticamente)</span></label>
-            <Input value={form.numero} onChange={(e) => setForm({ ...form, numero: e.target.value })} placeholder="0000000-00.2026.8.00.0001" />
+            <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+              Número do Processo{" "}
+              <span className="text-muted-foreground/60 font-normal">
+                (opcional, será gerado automaticamente)
+              </span>
+            </label>
+            <Input
+              value={form.numero}
+              onChange={(e) => setForm({ ...form, numero: e.target.value })}
+              placeholder="0000000-00.2026.8.00.0001"
+            />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">Título *</label>
-            <Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} placeholder="Ex: Ação de Indenização por Danos Morais" />
+            <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+              Título *
+            </label>
+            <Input
+              value={form.titulo}
+              onChange={(e) => setForm({ ...form, titulo: e.target.value })}
+              placeholder="Ex: Ação de Indenização por Danos Morais"
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Nome do Cliente *</label>
-              <Input value={form.clienteNome} onChange={(e) => setForm({ ...form, clienteNome: e.target.value })} placeholder="João da Silva" />
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                Nome do Cliente *
+              </label>
+              <Input
+                value={form.clienteNome}
+                onChange={(e) =>
+                  setForm({ ...form, clienteNome: e.target.value })
+                }
+                placeholder="João da Silva"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">CPF do Cliente *</label>
-              <Input value={form.clienteCpf} onChange={(e) => setForm({ ...form, clienteCpf: e.target.value })} placeholder="000.000.000-00" />
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                CPF do Cliente *
+              </label>
+              <Input
+                value={form.clienteCpf}
+                onChange={(e) =>
+                  setForm({ ...form, clienteCpf: e.target.value })
+                }
+                placeholder="000.000.000-00"
+              />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">Telefone do Cliente</label>
-            <Input value={form.clienteTelefone} onChange={(e) => setForm({ ...form, clienteTelefone: e.target.value })} placeholder="(11) 99999-0000" />
+            <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+              Telefone do Cliente
+            </label>
+            <Input
+              value={form.clienteTelefone}
+              onChange={(e) =>
+                setForm({ ...form, clienteTelefone: e.target.value })
+              }
+              placeholder="(11) 99999-0000"
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Área</label>
-              <select value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} className="w-full h-11 rounded-lg border border-border bg-card px-4 text-foreground focus:ring-2 focus:ring-primary outline-none text-sm">
-                {Object.entries(areaLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                Área
+              </label>
+              <select
+                value={form.area}
+                onChange={(e) => setForm({ ...form, area: e.target.value })}
+                className="w-full h-11 rounded-lg border border-border bg-card px-4 text-foreground focus:ring-2 focus:ring-primary outline-none text-sm"
+              >
+                {Object.entries(areaLabels).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Status</label>
-              <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="w-full h-11 rounded-lg border border-border bg-card px-4 text-foreground focus:ring-2 focus:ring-primary outline-none text-sm">
-                {Object.entries(statusLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                Status
+              </label>
+              <select
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value })}
+                className="w-full h-11 rounded-lg border border-border bg-card px-4 text-foreground focus:ring-2 focus:ring-primary outline-none text-sm"
+              >
+                {Object.entries(statusLabels).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
 
           {isAdmin && advogados.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">Advogado Responsável</label>
-              <select value={form.advogadoId} onChange={(e) => setForm({ ...form, advogadoId: Number(e.target.value) })} className="w-full h-11 rounded-lg border border-border bg-card px-4 text-foreground focus:ring-2 focus:ring-primary outline-none text-sm">
-                {advogados.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                Advogado Responsável
+              </label>
+              <select
+                value={form.advogadoId}
+                onChange={(e) =>
+                  setForm({ ...form, advogadoId: Number(e.target.value) })
+                }
+                className="w-full h-11 rounded-lg border border-border bg-card px-4 text-foreground focus:ring-2 focus:ring-primary outline-none text-sm"
+              >
+                {advogados.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} ({u.role})
+                  </option>
+                ))}
               </select>
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">Descrição</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+              Descrição
+            </label>
             <textarea
               value={form.descricao}
               onChange={(e) => setForm({ ...form, descricao: e.target.value })}
@@ -399,8 +552,12 @@ function ProcessoModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div className="pt-4 flex justify-end gap-3">
-            <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
-            <Button type="submit" isLoading={createMutation.isPending}>Criar Processo</Button>
+            <Button type="button" variant="ghost" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button type="submit" isLoading={createMutation.isPending}>
+              Criar Processo
+            </Button>
           </div>
         </form>
       </motion.div>
