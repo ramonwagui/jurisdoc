@@ -6,53 +6,6 @@ import { rm, readFile } from "fs/promises";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// server deps to bundle to reduce openat(2) syscalls
-// which helps cold start times without risking some
-// packages that are not bundle compatible
-const allowlist = [
-  "@aws-sdk/client-s3",
-  "@aws-sdk/s3-request-presigner",
-  "@google/generative-ai",
-  "@types/bcryptjs",
-  "@types/cookie-parser",
-  "@types/cors",
-  "@types/express",
-  "@types/morgan",
-  "@types/multer",
-  "axios",
-  "bcryptjs",
-  "cookie-parser",
-  "connect-pg-simple",
-  "cors",
-  "date-fns",
-  "dotenv",
-  "drizzle-orm",
-  "drizzle-zod",
-  "express",
-  "express-rate-limit",
-  "express-session",
-  "google-auth-library",
-  "jsonwebtoken",
-  "mammoth",
-  "memorystore",
-  "morgan",
-  "multer",
-  "nanoid",
-  "nodemailer",
-  "openai",
-  "openid-client",
-  "passport",
-  "passport-local",
-  "pdf-parse",
-  "pg",
-  "stripe",
-  "uuid",
-  "ws",
-  "xlsx",
-  "zod",
-  "zod-validation-error",
-];
-
 async function buildAll() {
   const distDir = path.resolve(__dirname, "dist");
   await rm(distDir, { recursive: true, force: true });
@@ -64,11 +17,6 @@ async function buildAll() {
     ...Object.keys(pkg.dependencies || {}),
     ...Object.keys(pkg.devDependencies || {}),
   ];
-  const externals = allDeps.filter(
-    (dep) =>
-      !allowlist.includes(dep) &&
-      !pkg.dependencies?.[dep]?.startsWith("workspace:"),
-  );
 
   await esbuild({
     entryPoints: [path.resolve(__dirname, "src/index.ts")],
@@ -80,7 +28,7 @@ async function buildAll() {
       "process.env.NODE_ENV": '"production"',
     },
     minify: true,
-    external: externals,
+    external: allDeps,
     logLevel: "info",
   });
 }
