@@ -14,7 +14,7 @@ import { ObjectStorageService } from "./lib/objectStorage";
 
 const app: Express = express();
 
-const ROOT_DIR = path.resolve(__dirname, "../..");
+const ROOT_DIR = path.resolve(process.cwd());
 const PUBLIC_DIR = path.join(ROOT_DIR, "public");
 
 console.log("=== APP.TS LOADED ===");
