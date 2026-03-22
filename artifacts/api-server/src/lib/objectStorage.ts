@@ -81,8 +81,7 @@ export class ObjectStorageService {
       throw new ObjectNotFoundError();
     }
 
-    const entityId = parts.slice(1).join("/");
-    const objectKey = `uploads/${entityId}`;
+    const objectKey = parts.slice(1).join("/");
 
     try {
       await s3Client.send(
