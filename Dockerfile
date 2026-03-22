@@ -22,6 +22,8 @@ WORKDIR /app/artifacts/api-server
 
 COPY --from=builder /app/artifacts/api-server/dist ./dist
 COPY --from=builder /app/artifacts/web/dist ./public
+COPY --from=deps /app/pnpm-workspace.yaml ./
+COPY --from=deps /app/tsconfig.base.json ./
 COPY --from=builder /app/artifacts/api-server/package.json ./
 
 RUN pnpm install
